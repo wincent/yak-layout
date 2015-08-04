@@ -1,0 +1,42 @@
+{
+  "name": "minimal-npm-boilerplate",
+  "version": "0.0.1",
+  "description": "Minimal boilerplate for creating an NPM package",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "gulp build",
+    "lint": "gulp lint",
+    "prepublish": "gulp build",
+    "test": "mocha --opts mocha/mocha.opts 'src/**/__mocks__/*.js' 'src/**/__tests__/*-test.js'",
+    "watch": "gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wincent/minimal-npm-boilerplate.git"
+  },
+  "author": {
+    "name": "Greg Hurrell",
+    "email": "greg@hurrell.net",
+    "url": "https://github.com/wincent"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wincent/minimal-npm-boilerplate/issues"
+  },
+  "homepage": "https://github.com/wincent/minimal-npm-boilerplate",
+  "devDependencies": {
+    "babel": "^5.8.20",
+    "babel-core": "^5.8.20",
+    "babel-eslint": "^4.0.5",
+    "eslint": "^1.0.0",
+    "expect": "^1.8.0",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.2.0",
+    "gulp-eslint": "^1.0.0",
+    "gulp-flowtype": "^0.4.7",
+    "gulp-spawn-mocha": "^2.2.1",
+    "gulp-util": "^3.0.6",
+    "mocha": "^2.2.5",
+    "sinon": "^1.15.4"
+  }
+}
