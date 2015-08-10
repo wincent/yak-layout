@@ -53,6 +53,27 @@ function getLetterForDisplay(letter: string) {
   }
 }
 
+function escapeRegExp(string: string): string {
+  // From:
+  // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getPrintableASCII(): string {
+  let ascii = '';
+  for (let i = 32; i <= 127; i++) {
+    ascii += String.fromCharCode(i);
+  }
+  return ascii;
+}
+
+const N_GRAM_CHARACTER_CLASS = '[' + escapeRegExp(getPrintableASCII()) + ']';
+const N_GRAM_REGEXP = new RegExp('^' + N_GRAM_CHARACTER_CLASS + '+$', 'gi');
+
+function isValidNGram(nGram: string): boolean {
+  return N_GRAM_REGEXP.test(nGram);
+}
+
 function getNGramFrequencies(
   corpus: string, n: number
 ): {nGrams: {[ngram: string]: number}, totalCount: number} {
@@ -60,9 +81,11 @@ function getNGramFrequencies(
   let totalCount = 0;
   for (var i = 0, max = corpus.length - n + 1; i < max; i++) {
     const nGram = corpus.substr(i, n);
-    nGrams[nGram] = nGrams[nGram] || 0;
-    nGrams[nGram]++;
-    totalCount++;
+    if (isValidNGram(nGram)) {
+      nGrams[nGram] = nGrams[nGram] || 0;
+      nGrams[nGram]++;
+      totalCount++;
+    }
   }
   return {nGrams, totalCount};
 }
