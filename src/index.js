@@ -55,6 +55,9 @@ function printStats(corpus: string) {
   sortedChars.forEach(([letter, count]) => {
     log(`${letter}: ${count}`);
   });
+  log('Letter frequency overview:');
+  log('--------------------------');
+  log(sortedChars.map(([letter, count]) => letter).join(''));
 }
 
 (async function() {
