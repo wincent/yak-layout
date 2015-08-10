@@ -20,6 +20,9 @@
     "url": "https://github.com/wincent"
   },
   "license": "MIT",
+  "bin": {
+    "yak": "dist/index.js"
+  },
   "bugs": {
     "url": "https://github.com/wincent/yak-layout/issues"
   },
@@ -38,5 +41,9 @@
     "gulp-util": "^3.0.6",
     "mocha": "^2.2.5",
     "sinon": "^1.15.4"
+  },
+  "dependencies": {
+    "bluebird": "^2.9.34",
+    "yargs": "^3.18.0"
   }
 }
