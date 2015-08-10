@@ -22,6 +22,41 @@ process.on('unhandledRejection', reason => {
   throw reason;
 });
 
+const log = ::console.log;
+
+function printStats(corpus: string) {
+  log(`Corpus length: ${corpus.length}`);
+
+  const chars = {};
+  for (var i = 0, max = corpus.length; i < max; i++) {
+    let letter = corpus[i];
+    if (letter === ' ') {
+      letter = '<space>';
+    } else if (letter === '\n') {
+      letter = '<newline>';
+    }
+    chars[letter] = chars[letter] || 0;
+    chars[letter]++;
+  }
+  const sortedChars = Object.keys(chars)
+    .sort((a, b) => {
+      const diff = chars[b] - chars[a];
+      if (diff) {
+        return diff;
+      } else {
+        // Count is same; use lexicographical sort to break tie.
+        return a < b ? -1 : 1;
+      }
+    })
+    .map(letter => [letter, chars[letter]]);
+
+  log('Letters by frequency:');
+  log('---------------------');
+  sortedChars.forEach(([letter, count]) => {
+    log(`${letter}: ${count}`);
+  });
+}
+
 (async function() {
   const json = require('../package');
   let argv = yargs
@@ -41,6 +76,7 @@ process.on('unhandledRejection', reason => {
   if (command === 'corpus-stats') {
     const corpusPath = path.join('yak', 'corpus.txt');
     const corpus = await readFile(corpusPath);
+    printStats(corpus.toString());
   } else {
     yargs.showHelp();
   }
