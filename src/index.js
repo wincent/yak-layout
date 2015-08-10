@@ -191,16 +191,13 @@ function printLayoutStats(layout: Array, corpus: string) {
   let totalCount = 0;
   const fingerCounts = {};
   const map = getLayoutLookupMap(layout);
-  const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
-  Object.keys(trigrams).forEach(trigram => {
-    const count = trigrams[trigram];
-    trigram.split('').forEach(letter => {
-      const keyIndex = map[letter];
-      const fingerIndex = FINGERS[keyIndex.index]; // Ignore Shift for now.
-      fingerCounts[fingerIndex] = fingerCounts[fingerIndex] || 0;
-      fingerCounts[fingerIndex]++;
-      totalCount++;
-    });
+  const unigrams = corpus.split('').filter(letter => N_GRAM_REGEXP.test(letter));
+  unigrams.forEach(letter => {
+    const keyIndex = map[getLetterForDisplay(letter)];
+    const fingerIndex = FINGERS[keyIndex.index]; // Ignore Shift for now.
+    fingerCounts[fingerIndex] = fingerCounts[fingerIndex] || 0;
+    fingerCounts[fingerIndex]++;
+    totalCount++;
   });
 
   const sortedCounts = getSortedFingerCounts(fingerCounts);
@@ -240,11 +237,11 @@ function getLettersForDisplay(letters: string) {
 
 function getLetterForDisplay(letter: string) {
   if (letter === ' ') {
-    return '<space>';
+    return 'Space';
   } else if (letter === '\n') {
-    return '<newline>';
+    return 'Return';
   } else if (letter === '\t') {
-    return '<tab>';
+    return 'Tab';
   } else {
     return letter;
   }
