@@ -53,14 +53,18 @@ function getLetterForDisplay(letter: string) {
   }
 }
 
-function getNGramFrequencies(corpus: string, n: number) {
+function getNGramFrequencies(
+  corpus: string, n: number
+): {nGrams: {[ngram: string]: number}, totalCount: number} {
   const nGrams = {};
+  let totalCount = 0;
   for (var i = 0, max = corpus.length - n + 1; i < max; i++) {
     const nGram = corpus.substr(i, n);
     nGrams[nGram] = nGrams[nGram] || 0;
     nGrams[nGram]++;
+    totalCount++;
   }
-  return nGrams;
+  return {nGrams, totalCount};
 }
 
 function getSortedNGrams(
@@ -79,28 +83,45 @@ function getSortedNGrams(
     .map(key => [key, nGrams[key]]);
 }
 
+function formatNumber(number: number): string {
+  const [integer, decimal] = (number + '').split('.');
+
+  // Borrow trick from ActiveSupport, using positive lookahead (?=) and negative
+  // lookahead (?!).
+  const delimited = integer.replace(
+    /(\d)(?=(\d\d\d)+(?!\d))/g,
+    (_, group) => group + ','
+  );
+
+  if (decimal) {
+    return [delimited, decimal].join('.');
+  } else {
+    return delimited;
+  }
+}
 
 function printStats(corpus: string) {
-  log(`Corpus length: ${corpus.length}`);
+  log(`Corpus length: ${formatNumber(corpus.length)} bytes`);
 
-  const unigrams = getNGramFrequencies(corpus, 1);
-  const bigrams = getNGramFrequencies(corpus, 2);
-  const trigrams = getNGramFrequencies(corpus, 3);
+  const {nGrams: unigrams, totalCount: unigramCount} = getNGramFrequencies(corpus, 1);
+  const {nGrams: bigrams, totalCount: bigramCount} = getNGramFrequencies(corpus, 2);
+  const {nGrams: trigrams, totalCount: trigramCount} = getNGramFrequencies(corpus, 3);
 
   const sortedUnigrams = getSortedNGrams(unigrams);
   const sortedBigrams = getSortedNGrams(bigrams);
   const sortedTrigrams = getSortedNGrams(trigrams);
 
   [
-    {label: 'Unigrams', nGrams: sortedUnigrams, count: 100},
-    {label: 'Bigrams', nGrams: sortedBigrams, count: 50},
-    {label: 'Trigrams', nGrams: sortedTrigrams, count: 50},
-  ].forEach(({label, nGrams, count}) => {
+    {label: 'Unigrams', nGrams: sortedUnigrams, top: 100, totalCount: unigramCount},
+    {label: 'Bigrams', nGrams: sortedBigrams, top: 50, totalCount: bigramCount},
+    {label: 'Trigrams', nGrams: sortedTrigrams, top: 50, totalCount: trigramCount},
+  ].forEach(({label, nGrams, top, totalCount}) => {
     const total = nGrams.length;
-    count = Math.min(count, total);
-    printHeading(`${label} by frequency (top ${count} of ${total}):`);
-    nGrams.slice(0, count).forEach(([key, count]) => {
-      log(`${getLettersForDisplay(key)}: ${count}`);
+    top = Math.min(top, total);
+    printHeading(`${label} by frequency (top ${top} of ${formatNumber(total)}):`);
+    nGrams.slice(0, top).forEach(([key, count]) => {
+      const percentage = (count / totalCount * 100).toFixed(2) + '%';
+      log(`${getLettersForDisplay(key)}: ${formatNumber(count)} (${percentage})`);
     });
   });
 
