@@ -69,9 +69,10 @@ function getPrintableASCII(): string {
 
 const N_GRAM_CHARACTER_CLASS = '[' + escapeRegExp(getPrintableASCII()) + ']';
 const N_GRAM_REGEXP = new RegExp('^' + N_GRAM_CHARACTER_CLASS + '+$', 'gi');
+const WHITESPACE_REGEXP = new RegExp('[ \t\n]');
 
 function isValidNGram(nGram: string): boolean {
-  return N_GRAM_REGEXP.test(nGram);
+  return !WHITESPACE_REGEXP.test(nGram) && N_GRAM_REGEXP.test(nGram);
 }
 
 function getNGramFrequencies(
@@ -176,7 +177,7 @@ function printStats(corpus: string) {
   if (command === 'corpus-stats') {
     const corpusPath = path.join('yak', 'corpus.txt');
     const corpus = await readFile(corpusPath);
-    printStats(corpus.toString());
+    printStats(corpus.toString().toLowerCase());
   } else {
     yargs.showHelp();
   }
