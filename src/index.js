@@ -24,23 +24,51 @@ process.on('unhandledRejection', reason => {
 
 const log = ::console.log;
 
-function printStats(corpus: string) {
-  log(`Corpus length: ${corpus.length}`);
+const HEADING =
+  '----------------------------------------' +
+  '----------------------------------------';
 
-  const chars = {};
-  for (var i = 0, max = corpus.length; i < max; i++) {
-    let letter = corpus[i];
-    if (letter === ' ') {
-      letter = '<space>';
-    } else if (letter === '\n') {
-      letter = '<newline>';
-    }
-    chars[letter] = chars[letter] || 0;
-    chars[letter]++;
+function printHeading(string: string): void {
+  const length = string.length;
+  log('\n' + string);
+  log(HEADING.slice(0, length));
+}
+
+function getLettersForDisplay(letters: string) {
+  return letters
+    .split('')
+    .map(letter => getLetterForDisplay(letter))
+    .join('');
+}
+
+function getLetterForDisplay(letter: string) {
+  if (letter === ' ') {
+    return '<space>';
+  } else if (letter === '\n') {
+    return '<newline>';
+  } else if (letter === '\t') {
+    return '<tab>';
+  } else {
+    return letter;
   }
-  const sortedChars = Object.keys(chars)
+}
+
+function getNGramFrequencies(corpus: string, n: number) {
+  const nGrams = {};
+  for (var i = 0, max = corpus.length - n + 1; i < max; i++) {
+    const nGram = corpus.substr(i, n);
+    nGrams[nGram] = nGrams[nGram] || 0;
+    nGrams[nGram]++;
+  }
+  return nGrams;
+}
+
+function getSortedNGrams(
+  nGrams: {[nGram: string]: number}
+): Array<Array<string, number>> {
+  return Object.keys(nGrams)
     .sort((a, b) => {
-      const diff = chars[b] - chars[a];
+      const diff = nGrams[b] - nGrams[a];
       if (diff) {
         return diff;
       } else {
@@ -48,16 +76,40 @@ function printStats(corpus: string) {
         return a < b ? -1 : 1;
       }
     })
-    .map(letter => [letter, chars[letter]]);
+    .map(key => [key, nGrams[key]]);
+}
 
-  log('Letters by frequency:');
-  log('---------------------');
-  sortedChars.forEach(([letter, count]) => {
-    log(`${letter}: ${count}`);
+
+function printStats(corpus: string) {
+  log(`Corpus length: ${corpus.length}`);
+
+  const unigrams = getNGramFrequencies(corpus, 1);
+  const bigrams = getNGramFrequencies(corpus, 2);
+  const trigrams = getNGramFrequencies(corpus, 3);
+
+  const sortedUnigrams = getSortedNGrams(unigrams);
+  const sortedBigrams = getSortedNGrams(bigrams);
+  const sortedTrigrams = getSortedNGrams(trigrams);
+
+  [
+    {label: 'Unigrams', nGrams: sortedUnigrams, count: 100},
+    {label: 'Bigrams', nGrams: sortedBigrams, count: 50},
+    {label: 'Trigrams', nGrams: sortedTrigrams, count: 50},
+  ].forEach(({label, nGrams, count}) => {
+    const total = nGrams.length;
+    count = Math.min(count, total);
+    printHeading(`${label} by frequency (top ${count} of ${total}):`);
+    nGrams.slice(0, count).forEach(([key, count]) => {
+      log(`${getLettersForDisplay(key)}: ${count}`);
+    });
   });
-  log('Letter frequency overview:');
-  log('--------------------------');
-  log(sortedChars.map(([letter, count]) => letter).join(''));
+
+  const overview = sortedUnigrams
+    .map(([key, count]) => getLetterForDisplay(key))
+    .filter(letter => letter.length === 1)
+    .join('')
+  printHeading('Unigrams frequency overview:');
+  log(overview);
 }
 
 (async function() {
