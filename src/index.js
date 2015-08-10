@@ -130,7 +130,8 @@ function printStats(corpus: string) {
   const {nGrams: bigrams, totalCount: bigramCount} = getNGramFrequencies(corpus, 2);
   const {nGrams: trigrams, totalCount: trigramCount} = getNGramFrequencies(corpus, 3);
 
-  const sortedUnigrams = getSortedNGrams(unigrams);
+  const sortedUnigrams = getSortedNGrams(unigrams)
+    .filter(([key, count]) => key !== ' ');
   const sortedBigrams = getSortedNGrams(bigrams);
   const sortedTrigrams = getSortedNGrams(trigrams);
 
