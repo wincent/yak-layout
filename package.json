@@ -1,7 +1,7 @@
 {
-  "name": "minimal-npm-boilerplate",
+  "name": "yak-layout",
   "version": "0.0.1",
-  "description": "Minimal boilerplate for creating an NPM package",
+  "description": "Keyboard layout produced via yak-shaving",
   "main": "dist/index.js",
   "scripts": {
     "build": "gulp build",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wincent/minimal-npm-boilerplate.git"
+    "url": "https://github.com/wincent/yak-layout.git"
   },
   "author": {
     "name": "Greg Hurrell",
@@ -21,9 +21,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/wincent/minimal-npm-boilerplate/issues"
+    "url": "https://github.com/wincent/yak-layout/issues"
   },
-  "homepage": "https://github.com/wincent/minimal-npm-boilerplate",
+  "homepage": "https://github.com/wincent/yak-layout",
   "devDependencies": {
     "babel": "^5.8.20",
     "babel-core": "^5.8.20",
