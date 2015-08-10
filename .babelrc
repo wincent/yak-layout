@@ -3,6 +3,8 @@
     "es7.asyncFunctions",
     "es7.classProperties",
     "es7.decorators",
-    "es7.objectRestSpread"
+    "es7.functionBind",
+    "es7.objectRestSpread",
+    "es7.trailingFunctionCommas"
   ]
 }
