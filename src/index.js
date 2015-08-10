@@ -24,13 +24,24 @@ process.on('unhandledRejection', reason => {
 
 (async function() {
   const json = require('../package');
-  const options = yargs
-    .usage('Usage: $0')
+  let argv = yargs
+    .usage('Usage: $0 <command> [options...]')
+    .command('corpus-stats', 'show corpus stats', yargs => {
+      // TODO: maybe put something here
+    })
+    .help('h')
+    .alias('h', 'help')
     .version(json.version)
     .epilog(json.homepage)
-    .strict();
-  const config = options.argv;
+    .strict()
+    .argv;
 
-  const corpusPath = path.join('yak', 'corpus.txt');
-  const corpus = await readFile(corpusPath);
+  const command = argv._[0];
+
+  if (command === 'corpus-stats') {
+    const corpusPath = path.join('yak', 'corpus.txt');
+    const corpus = await readFile(corpusPath);
+  } else {
+    yargs.showHelp();
+  }
 })();
