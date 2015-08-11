@@ -18,6 +18,15 @@ import yargs from 'yargs';
 
 const readFile = Promise.promisify(fs.readFile);
 
+type Key = {
+  id: number,
+  row: number,
+  column: number,
+  name: string,
+  x: number,
+  y: number,
+};
+
 process.on('unhandledRejection', reason => {
   throw reason;
 });
@@ -136,13 +145,33 @@ const FINGER_NAMES = [
   /* 9 */ 'Right Pinkie',
 ];
 
-const FINGERS = [
+/**
+ * My shockingly unorthodox finger-to-key mappings.
+ *
+ * Note the almost non-existent use of pinkies, and relatively heavy use of the
+ * ring fingers, which are typically regarded as among the least flexible
+ * fingers.
+ */
+const FINGERS_PLACEMENTS = [
   /* Row 0: */ 1, 2, 2, 3, 3, 3, 6, 6, 6, 7, 7, 8, 8, 8,
   /* Row 1: */ 1, 1, 2, 3, 3, 3, 6, 6, 6, 7, 7, 7, 8, 8,
   /* Row 2: */ 1, 1, 1, 2, 3, 3, 6, 6, 7, 7, 8, 8, 8, 8,
   /* Row 3: */ 1, 1, 1, 2, 3, 3, 6, 6, 7, 8, 8, 8, 8,
   /* Row 4: */ 0, 1, 2, 3, 3, 6, 6, 6, 7, 8, 8, 9,
   /* Row 5: */ 0, 0, 4, 4, 5, 5, 5, 6, 7, 7, 8
+];
+
+const FINGER_STRENGTHS = [
+  /* 0: left pinkie */ 0.1,
+  /* 1: left ring */ 0.6,
+  /* 2: left middle */ 0.7,
+  /* 3: left index */ 0.9,
+  /* 4: left thumb */ 0.4,
+  /* 5: right thumb */ 0.5,
+  /* 6: right index */ 1.0,
+  /* 7: right middle */ 0.8,
+  /* 8: right ring */ 0.7,
+  /* 9: right pinkie */ 0.1,
 ];
 
 /**
@@ -181,6 +210,28 @@ function getLayoutLookupMap(
   return map;
 }
 
+/**
+ * Returns the "distance" (in arbitrary units) between keys `a` and `b`.
+ */
+function getDistance(a: Key, b: Key): number {
+  // Via Pythagorean theorem (a^2 + b^2 = c^2).
+  return Math.sqrt(
+    Math.pow(Math.abs(a.x - b.x), 2) +
+    Math.pow(Math.abs(a.y - b.y), 2)
+  );
+}
+
+function getCorpusDistance(layout: Array, unigrams: Array<string>): number {
+  const map = getLayoutLookupMap(layout);
+  let distance = 0;
+  for (let i = 0, max = unigrams.length; i < max - 1; i++) {
+    const a = KEYS[map[getLetterForDisplay(unigrams[i])].index];
+    const b = KEYS[map[getLetterForDisplay(unigrams[i + 1])].index];
+    distance += getDistance(a, b);
+  }
+  return distance;
+}
+
 function getSortedFingerCounts(fingerCounts) {
   return Object.keys(fingerCounts)
     .sort((a, b) => fingerCounts[b] - fingerCounts[a])
@@ -194,7 +245,7 @@ function printLayoutStats(layout: Array, corpus: string) {
   const unigrams = corpus.split('').filter(letter => N_GRAM_REGEXP.test(letter));
   unigrams.forEach(letter => {
     const keyIndex = map[getLetterForDisplay(letter)];
-    const fingerIndex = FINGERS[keyIndex.index]; // Ignore Shift for now.
+    const fingerIndex = FINGERS_PLACEMENTS[keyIndex.index]; // Ignore Shift for now.
     fingerCounts[fingerIndex] = fingerCounts[fingerIndex] || 0;
     fingerCounts[fingerIndex]++;
     totalCount++;
@@ -216,6 +267,11 @@ function printLayoutStats(layout: Array, corpus: string) {
   }, {});
   log(`Left: ${formatNumber(hands.left)} (${getPercentage(hands.left, totalCount)})`);
   log(`Right: ${formatNumber(hands.right)} (${getPercentage(hands.right, totalCount)})`);
+
+  printHeading('Distance:');
+  const distance = getCorpusDistance(layout, unigrams);
+  const normalized = distance / unigrams.length;
+  log(`Total: ${formatNumber(distance, 2)} (normalized: ${formatNumber(normalized, 2)})`);
 }
 
 const HEADING =
@@ -301,8 +357,8 @@ function getSortedNGrams(
     .map(key => [key, nGrams[key]]);
 }
 
-function formatNumber(number: number): string {
-  const [integer, decimal] = (number + '').split('.');
+function formatNumber(number: number, precision = 0: number): string {
+  const [integer, decimal] = (number.toFixed(precision)).split('.');
 
   // Borrow trick from ActiveSupport, using positive lookahead (?=) and negative
   // lookahead (?!).
