@@ -181,7 +181,16 @@ const FINGER_STRENGTHS = [
  * unshifted version and the second element being the shifted version).
  */
 const LAYOUTS = {
-  QWERTY: [
+  Colemak: [
+    /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
+    /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
+    /* Row 2: */ 'Tab', 'q', 'w', 'f', 'p', 'g', 'j', 'l', 'u', 'y', [';', ':'], ['[', '{'], [']', '}'], ['\\', '|'],
+    /* Row 3: */ 'Caps Lock', 'a', 'r', 's', 't', 'd', 'h', 'n', 'e', 'i', 'o', ["'", '"'], 'Return',
+    /* Row 4: */ 'Shift (Left)', 'z', 'x', 'c', 'v', 'b', 'k', 'm', [',', '<'], ['.', '>'], ['/', '?'], 'Shift (Right)',
+    /* Row 5: */ 'fn', 'Control (Left)', 'Alt (Left)', 'Command (Left)', 'Space', 'Command (Right)', 'Alt (Right)', 'Left', 'Up', 'Down', 'Right',
+  ],
+
+  Qwerty: [
     /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
     /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
     /* Row 2: */ 'Tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', ['[', '{'], [']', '}'], ['\\', '|'],
@@ -440,7 +449,8 @@ function printCorpusStats(corpus: string) {
   } else if (command === 'layout-stats') {
     const corpusPath = path.join('yak', 'corpus.txt');
     const corpus = await readFile(corpusPath);
-    printLayoutStats(LAYOUTS.QWERTY, corpus.toString().toLowerCase());
+    printLayoutStats(LAYOUTS.Qwerty, corpus.toString().toLowerCase());
+    printLayoutStats(LAYOUTS.Colemak, corpus.toString().toLowerCase());
   } else {
     yargs.showHelp();
   }
