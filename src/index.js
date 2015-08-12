@@ -316,7 +316,16 @@ function getRollMultiplier(trigram: string, layout: Layout): number {
  * The larger the row jumps, the greater the penalty.
  */
 function getRowJumpMultiplier(trigram: string, layout: Layout): number {
-  return 1;
+  const map = getLayoutLookupMap(layout);
+  const letters = trigram.split('');
+  const keys = letters.map(letter => KEYS[map[letter].index]);
+  let rowsJumped = 0;
+  for (let i = 1; i < keys.length; i++) {
+    rowsJumped += Math.abs(keys[i].row - keys[i - 1].row);
+  }
+  const maximumJump = 10; // Worst case is is row 0 -> row 5 -> row 0.
+  const dampener = 0.5; // We don't want this to overwhelm roll boost.
+  return 1 + normalize(rowsJumped, 0, maximumJump) * dampener;
 }
 
 /**
