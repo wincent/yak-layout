@@ -161,6 +161,23 @@ const FINGERS_PLACEMENTS = [
   /* Row 5: */ 0, 0, 4, 4, 5, 5, 5, 6, 7, 7, 8
 ];
 
+/**
+ * The key on which each finger is considered to be in its optimal resting
+ * position (ie on the home row).
+ */
+const FINGER_HOME_KEYS = [
+  /* 0: left pinkie */ 3 * 14 + 1,
+  /* 1: left ring */ 3 * 14 + 2,
+  /* 2: left middle */ 3 * 14 + 3,
+  /* 3: left index */ 3 * 14 + 4,
+  /* 4: left thumb */ 3 * 14 + 1 * 13 + 5,
+  /* 5: right thumb */ 3 * 14 + 1 * 13 + 5,
+  /* 6: right index */ 3 * 14 + 7,
+  /* 7: right middle */ 3 * 14 + 8,
+  /* 8: right ring */ 3 * 14 + 9,
+  /* 9: right pinkie */ 3 * 14 + 10,
+];
+
 const FINGER_STRENGTHS = [
   /* 0: left pinkie */ 0.1,
   /* 1: left ring */ 0.6,
@@ -200,6 +217,8 @@ const LAYOUTS = {
   ],
 };
 
+const layoutLookupMaps = new Map();
+
 /**
  * Given a "human-readable" layout, return a map for fast look-up from input
  * character to pressed key.
@@ -207,16 +226,19 @@ const LAYOUTS = {
 function getLayoutLookupMap(
   layout: Array
 ): {[key: string]: {index: number, shift: boolean}} {
-  const map = {};
-  layout.forEach((key, index) => {
-    if (Array.isArray(key)) {
-      map[key[0]] = {index, shift: false};
-      map[key[1]] = {index, shift: true};
-    } else {
-      map[key] = {index, shift: false};
-    }
-  });
-  return map;
+  if (!layoutLookupMaps.has(layout)) {
+    const map = {};
+    layout.forEach((key, index) => {
+      if (Array.isArray(key)) {
+        map[key[0]] = {index, shift: false};
+        map[key[1]] = {index, shift: true};
+      } else {
+        map[key] = {index, shift: false};
+      }
+    });
+    layoutLookupMaps.set(layout, map);
+  }
+  return layoutLookupMaps.get(layout);
 }
 
 /**
@@ -228,6 +250,106 @@ function getDistance(a: Key, b: Key): number {
     Math.pow(Math.abs(a.x - b.x), 2) +
     Math.pow(Math.abs(a.y - b.y), 2)
   );
+}
+
+
+/**
+ * Adjusts the score of a trigram according to any "rolls" that may be present
+ * in it.
+ *
+ * - Inward rolls are favorable, so get strongly boosted.
+ * - Outward rolls are less so, so get boosted weakly.
+ * - 2-letter rolls that combine alternation score more highly than 2-letter
+ *   rolls followed (or preceded) by a key-press on the same hand.
+ * - Tighter rolls (ie. ones with minimal column or row jumps) score more
+ *   favorably.
+ */
+function getRollMultiplier(trigram: string, layout): number {
+  return 1;
+}
+
+/**
+ * Adjusts the score of a trigram according to any contained row jumps.
+ *
+ * The larger the row jumps, the greater the penalty.
+ */
+function getRowJumpMultiplier(trigram: string, layout): number {
+  return 1;
+}
+
+/**
+ * Adjusts the score of a trigram according to any contained column jumps.
+ *
+ * Small row jumps can be favorable (see `getRollMultiplier`), but large jumps,
+ * or jumps involving the same finger, can be costly.
+ */
+function getColumnJumpMultiplier(trigram: string, layout): number {
+  return 1;
+}
+
+/**
+ * Adjusts the score of a trigram according involving the use of the same finger to make multiple key-presses.
+ *
+ * The greater the distance between successive key-presses, the greater the
+ * penalty.
+ */
+function getSameFingerMultiplier(trigram: string, layout): number {
+  return 1;
+}
+
+/**
+ * Adjusts the score of a trigram according to the position of the keys
+ * involved.
+ *
+ * In general, keys receive a greater penalty the farther they are from the
+ * corresponding finger's position on the home row.
+ *
+ * The adjustment applied here is fairly weak because there are other, more
+ * important factors that need to be weighed more heavily (for example, a
+ * distant key becomes more accessible if a previous key in the trigram has
+ * caused the hand to float towards the subsequent key's region).
+ */
+function getPositionMultiplier(trigram: string, layout): number {
+  const map = getLayoutLookupMap(layout);
+  const letters = trigram.split('');
+  const keys = letters.map(letter => map[letter].index);
+  const fingers = keys.map(key => FINGERS_PLACEMENTS[key]);
+  return fingers.reduce((multiplier, finger, i) => {
+    const distance = getDistance(KEYS[keys[i]], KEYS[FINGER_HOME_KEYS[finger]]);
+    return multiplier * (distance + 1);
+  }, 1);
+}
+
+/**
+ * Modifies the score of a trigram according to the strength of the fingers
+ * involved.
+ */
+function getFingerMultiplier(trigram: string, layout): number {
+  const map = getLayoutLookupMap(layout);
+  const letters = trigram.split('');
+  const fingers = letters.map(letter => FINGERS_PLACEMENTS[map[letter].index]);
+  return fingers.reduce((multiplier, finger) => (
+    multiplier * (FINGER_STRENGTHS[finger])
+  ), 1);
+}
+
+/**
+ * Calculates an effort score for the provided `trigram`. Lower scores are
+ * better.
+ *
+ * Each trigram starts off with an initial score of 1, which is adjusted upwards
+ * or downwards from there by a series of "multipliers", each considering a
+ * particular factor such as finger strength or row jumps etc.
+ */
+function scoreTrigram(trigram: string, layout) {
+  return [
+    getRollMultiplier,
+    getRowJumpMultiplier,
+    getColumnJumpMultiplier,
+    getSameFingerMultiplier,
+    getPositionMultiplier,
+    getFingerMultiplier,
+  ].reduce((score, scorer) => score * scorer(trigram, layout), 1);
 }
 
 function getCorpusDistance(layout: Array, unigrams: Array<string>): number {
@@ -281,6 +403,16 @@ function printLayoutStats(layout: Array, corpus: string) {
   const distance = getCorpusDistance(layout, unigrams);
   const normalized = distance / unigrams.length;
   log(`Total: ${formatNumber(distance, 2)} (normalized: ${formatNumber(normalized, 2)})`);
+
+  printHeading('Effort (per trigram):');
+  const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
+  const sortedTrigrams = getSortedNGrams(trigrams);
+  sortedTrigrams.slice(0, 50).forEach(([key, count]) => {
+    const percentage = getPercentage(count, totalCount);
+    const score = formatNumber(scoreTrigram(key, layout), 4);
+    log(`${getLettersForDisplay(key)}: ${formatNumber(count)} (${percentage}) [score: ${score}]`);
+  });
+
 }
 
 const HEADING =
