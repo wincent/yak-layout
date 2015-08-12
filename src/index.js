@@ -452,17 +452,6 @@ function scoreTrigram(trigram: string, layout: Layout) {
   ].reduce((score, scorer) => score * scorer(trigram, layout), 1);
 }
 
-function getCorpusDistance(layout: Layout, unigrams: Array<string>): number {
-  const map = getLayoutLookupMap(layout);
-  let distance = 0;
-  for (let i = 0, max = unigrams.length; i < max - 1; i++) {
-    const a = KEYS[map[getLetterForDisplay(unigrams[i])].index];
-    const b = KEYS[map[getLetterForDisplay(unigrams[i + 1])].index];
-    distance += getDistance(a, b);
-  }
-  return distance;
-}
-
 function getSortedFingerCounts(fingerCounts) {
   return Object.keys(fingerCounts)
     .sort((a, b) => fingerCounts[b] - fingerCounts[a])
@@ -499,11 +488,6 @@ function printLayoutStats(layout: Layout, corpus: string) {
   }, {});
   log(`Left: ${formatNumber(hands.left)} (${getPercentage(hands.left, totalCount)})`);
   log(`Right: ${formatNumber(hands.right)} (${getPercentage(hands.right, totalCount)})`);
-
-  printHeading('Distance:');
-  const distance = getCorpusDistance(layout, unigrams);
-  const normalized = distance / unigrams.length;
-  log(`Total: ${formatNumber(distance, 2)} (normalized: ${formatNumber(normalized, 2)})`);
 
   printHeading('Effort (per trigram):');
   const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
