@@ -27,6 +27,11 @@ type Key = {
   y: number,
 };
 
+type Layout = {
+  keys: Array,
+  name: string,
+};
+
 process.on('unhandledRejection', reason => {
   throw reason;
 });
@@ -198,23 +203,29 @@ const FINGER_STRENGTHS = [
  * unshifted version and the second element being the shifted version).
  */
 const LAYOUTS = {
-  Colemak: [
-    /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
-    /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
-    /* Row 2: */ 'Tab', 'q', 'w', 'f', 'p', 'g', 'j', 'l', 'u', 'y', [';', ':'], ['[', '{'], [']', '}'], ['\\', '|'],
-    /* Row 3: */ 'Caps Lock', 'a', 'r', 's', 't', 'd', 'h', 'n', 'e', 'i', 'o', ["'", '"'], 'Return',
-    /* Row 4: */ 'Shift (Left)', 'z', 'x', 'c', 'v', 'b', 'k', 'm', [',', '<'], ['.', '>'], ['/', '?'], 'Shift (Right)',
-    /* Row 5: */ 'fn', 'Control (Left)', 'Alt (Left)', 'Command (Left)', 'Space', 'Command (Right)', 'Alt (Right)', 'Left', 'Up', 'Down', 'Right',
-  ],
+  Colemak: {
+    keys: [
+      /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
+      /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
+      /* Row 2: */ 'Tab', 'q', 'w', 'f', 'p', 'g', 'j', 'l', 'u', 'y', [';', ':'], ['[', '{'], [']', '}'], ['\\', '|'],
+      /* Row 3: */ 'Caps Lock', 'a', 'r', 's', 't', 'd', 'h', 'n', 'e', 'i', 'o', ["'", '"'], 'Return',
+      /* Row 4: */ 'Shift (Left)', 'z', 'x', 'c', 'v', 'b', 'k', 'm', [',', '<'], ['.', '>'], ['/', '?'], 'Shift (Right)',
+      /* Row 5: */ 'fn', 'Control (Left)', 'Alt (Left)', 'Command (Left)', 'Space', 'Command (Right)', 'Alt (Right)', 'Left', 'Up', 'Down', 'Right',
+    ],
+    name: 'Colemak',
+  },
 
-  Qwerty: [
-    /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
-    /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
-    /* Row 2: */ 'Tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', ['[', '{'], [']', '}'], ['\\', '|'],
-    /* Row 3: */ 'Caps Lock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', [';', ':'], ["'", '"'], 'Return',
-    /* Row 4: */ 'Shift (Left)', 'z', 'x', 'c', 'v', 'b', 'n', 'm', [',', '<'], ['.', '>'], ['/', '?'], 'Shift (Right)',
-    /* Row 5: */ 'fn', 'Control (Left)', 'Alt (Left)', 'Command (Left)', 'Space', 'Command (Right)', 'Alt (Right)', 'Left', 'Up', 'Down', 'Right',
-  ],
+  Qwerty: {
+    keys: [
+      /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
+      /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
+      /* Row 2: */ 'Tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', ['[', '{'], [']', '}'], ['\\', '|'],
+      /* Row 3: */ 'Caps Lock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', [';', ':'], ["'", '"'], 'Return',
+      /* Row 4: */ 'Shift (Left)', 'z', 'x', 'c', 'v', 'b', 'n', 'm', [',', '<'], ['.', '>'], ['/', '?'], 'Shift (Right)',
+      /* Row 5: */ 'fn', 'Control (Left)', 'Alt (Left)', 'Command (Left)', 'Space', 'Command (Right)', 'Alt (Right)', 'Left', 'Up', 'Down', 'Right',
+    ],
+    name: 'Qwerty',
+  },
 };
 
 const layoutLookupMaps = new Map();
@@ -224,11 +235,11 @@ const layoutLookupMaps = new Map();
  * character to pressed key.
  */
 function getLayoutLookupMap(
-  layout: Array
+  layout: Layout
 ): {[key: string]: {index: number, shift: boolean}} {
-  if (!layoutLookupMaps.has(layout)) {
+  if (!layoutLookupMaps.has(layout.name)) {
     const map = {};
-    layout.forEach((key, index) => {
+    layout.keys.forEach((key, index) => {
       if (Array.isArray(key)) {
         map[key[0]] = {index, shift: false};
         map[key[1]] = {index, shift: true};
@@ -236,9 +247,9 @@ function getLayoutLookupMap(
         map[key] = {index, shift: false};
       }
     });
-    layoutLookupMaps.set(layout, map);
+    layoutLookupMaps.set(layout.name, map);
   }
-  return layoutLookupMaps.get(layout);
+  return layoutLookupMaps.get(layout.name);
 }
 
 /**
@@ -261,16 +272,27 @@ const maximumDistanceFromHomeKey = Math.max(...FINGERS_PLACEMENTS.map((placement
 }));
 
 /**
+ * Also need to know the farthest distance between same-finger keys.
+ *
+ * (Yes, this is a horrible quadratic algorithm).
+ */
+const maximumDistanceOnSameFinger = KEYS.reduce((max, key, i) => {
+  const finger = FINGERS_PLACEMENTS[i];
+  for (let j = 0; j < KEYS.length; j++) {
+    if (FINGERS_PLACEMENTS[j] === finger) {
+      max = Math.max(max, getDistance(KEYS[i], KEYS[j]));
+    }
+  }
+  return max;
+}, 0);
+
+/**
  * Normalizes `value` within the range defined by `minimum` to `maximum` to a
  * scale from 0 to 1.
  */
 function normalize(value: number, minimum: number, maximum: number): number {
   // Via: http://stats.stackexchange.com/a/70807
   return (value - minimum) / (maximum - minimum);
-}
-
-function normalizeDistance(distance: number): number {
-  return normalize(distance, 0, maximumDistanceFromHomeKey);
 }
 
 /**
@@ -284,7 +306,7 @@ function normalizeDistance(distance: number): number {
  * - Tighter rolls (ie. ones with minimal column or row jumps) score more
  *   favorably.
  */
-function getRollMultiplier(trigram: string, layout): number {
+function getRollMultiplier(trigram: string, layout: Layout): number {
   return 1;
 }
 
@@ -293,7 +315,7 @@ function getRollMultiplier(trigram: string, layout): number {
  *
  * The larger the row jumps, the greater the penalty.
  */
-function getRowJumpMultiplier(trigram: string, layout): number {
+function getRowJumpMultiplier(trigram: string, layout: Layout): number {
   return 1;
 }
 
@@ -303,18 +325,34 @@ function getRowJumpMultiplier(trigram: string, layout): number {
  * Small row jumps can be favorable (see `getRollMultiplier`), but large jumps,
  * or jumps involving the same finger, can be costly.
  */
-function getColumnJumpMultiplier(trigram: string, layout): number {
+function getColumnJumpMultiplier(trigram: string, layout: Layout): number {
   return 1;
 }
 
 /**
- * Adjusts the score of a trigram according involving the use of the same finger to make multiple key-presses.
+ * Adjusts the score of a trigram according involving the use of the same finger
+ * to make multiple key-presses.
  *
  * The greater the distance between successive key-presses, the greater the
  * penalty.
  */
-function getSameFingerMultiplier(trigram: string, layout): number {
-  return 1;
+function getSameFingerMultiplier(trigram: string, layout: Layout): number {
+  const map = getLayoutLookupMap(layout);
+  const letters = trigram.split('');
+  const keys = letters.map(letter => map[letter].index);
+  return keys.reduce((multiplier, key, i) => {
+    const fingerA = FINGERS_PLACEMENTS[key];
+    const fingerB = FINGERS_PLACEMENTS[keys[i - 1]];
+    if (fingerA === fingerB) {
+      const distance = normalize(
+        getDistance(KEYS[key], KEYS[keys[i - 1]]), 0, maximumDistanceOnSameFinger
+      );
+      return multiplier * (1 - distance);
+    } else {
+      // Different fingers; not our concern here.
+      return multiplier;
+    }
+  }, 1);
 }
 
 /**
@@ -329,14 +367,14 @@ function getSameFingerMultiplier(trigram: string, layout): number {
  * distant key becomes more accessible if a previous key in the trigram has
  * caused the hand to float towards the subsequent key's region).
  */
-function getPositionMultiplier(trigram: string, layout): number {
+function getPositionMultiplier(trigram: string, layout: Layout): number {
   const map = getLayoutLookupMap(layout);
   const letters = trigram.split('');
   const keys = letters.map(letter => map[letter].index);
   const fingers = keys.map(key => FINGERS_PLACEMENTS[key]);
   return fingers.reduce((multiplier, finger, i) => {
     const distance = getDistance(KEYS[keys[i]], KEYS[FINGER_HOME_KEYS[finger]]);
-    return multiplier * (normalizeDistance(distance) + 1);
+    return multiplier * (normalize(distance, 0, maximumDistanceFromHomeKey) + 1);
   }, 1);
 }
 
@@ -344,7 +382,7 @@ function getPositionMultiplier(trigram: string, layout): number {
  * Modifies the score of a trigram according to the strength of the fingers
  * involved.
  */
-function getFingerMultiplier(trigram: string, layout): number {
+function getFingerMultiplier(trigram: string, layout: Layout): number {
   const map = getLayoutLookupMap(layout);
   const letters = trigram.split('');
   const fingers = letters.map(letter => FINGERS_PLACEMENTS[map[letter].index]);
@@ -361,7 +399,7 @@ function getFingerMultiplier(trigram: string, layout): number {
  * or downwards from there by a series of "multipliers", each considering a
  * particular factor such as finger strength or row jumps etc.
  */
-function scoreTrigram(trigram: string, layout) {
+function scoreTrigram(trigram: string, layout: Layout) {
   return [
     getRollMultiplier,
     getRowJumpMultiplier,
@@ -372,7 +410,7 @@ function scoreTrigram(trigram: string, layout) {
   ].reduce((score, scorer) => score * scorer(trigram, layout), 1);
 }
 
-function getCorpusDistance(layout: Array, unigrams: Array<string>): number {
+function getCorpusDistance(layout: Layout, unigrams: Array<string>): number {
   const map = getLayoutLookupMap(layout);
   let distance = 0;
   for (let i = 0, max = unigrams.length; i < max - 1; i++) {
@@ -389,7 +427,8 @@ function getSortedFingerCounts(fingerCounts) {
     .map(finger => [finger, fingerCounts[finger]]);
 }
 
-function printLayoutStats(layout: Array, corpus: string) {
+function printLayoutStats(layout: Layout, corpus: string) {
+  printHeading(`${layout.name} layout stats:`);
   let totalCount = 0;
   const fingerCounts = {};
   const map = getLayoutLookupMap(layout);
