@@ -662,23 +662,46 @@ function printCorpusStats(corpus: string) {
 
 (async function() {
   const json = require('../package');
-  let argv = yargs
+
+  function common(yargsish) {
+    return yargsish
+      .help('h')
+      .alias('h', 'help')
+      .version(json.version)
+      .epilog(json.homepage)
+      .strict()
+      .argv;
+  }
+
+  let argv = common(yargs
     .usage('Usage: $0 <command> [options...]')
     .command('corpus-stats', 'show corpus stats', yargs => {
-      // TODO: maybe put something here
+      argv = common(
+        yargs
+          .reset()
+          .usage('Usage: $0 corpus-stats')
+      );
     })
+    .command('help', 'Show help')
     .command('layout-stats', 'show layout stats', yargs => {
-      // TODO: something?
+      // TODO: want to show stats for a specific layout here
+      argv = common(
+        yargs
+          .reset()
+          .usage('Usage: $0 layout-stats [layout]')
+      );
     })
     .command('optimize', 'produce optimized keyboard layout', yargs => {
-      // TODO: something here; eg optional iteration count etc
+      argv = common(
+        yargs
+          .reset()
+          .usage('Usage: $0 optimize')
+          .default('iteration-count', 10000)
+          .alias('c', 'iteration-count')
+      );
     })
-    .help('h')
-    .alias('h', 'help')
-    .version(json.version)
-    .epilog(json.homepage)
-    .strict()
-    .argv;
+    .demand(1, 'must provide a valid command')
+  );
 
   const command = argv._[0];
 
