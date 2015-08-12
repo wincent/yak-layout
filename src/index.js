@@ -32,12 +32,20 @@ type Layout = {
   name: string,
 };
 
+/**
+ * Allows us to generate intermediate layouts with unique names.
+ */
+let layoutCounter = 0;
+
 process.on('unhandledRejection', reason => {
   throw reason;
 });
 
 const log = ::console.log;
 
+function print(string: string): void {
+  process.stdout.write(string);
+}
 
 /**
  * The center of each key is measured in an arbitrary coordinate system (pixels)
@@ -47,7 +55,7 @@ const log = ::console.log;
 */
 const KEYS = [
   // Row 0.
-  {id: 0, row: 0, column: 0, name: 'Esc', x: 126, y: 71},
+  {id: 0, row: 0, column: 0, name: '⎋', x: 126, y: 71},
   {id: 1, row: 0, column: 1, name: 'F1', x: 352, y: 71},
   {id: 2, row: 0, column: 2, name: 'F2', x: 590, y: 71},
   {id: 3, row: 0, column: 3, name: 'F3', x: 816, y: 71},
@@ -60,7 +68,7 @@ const KEYS = [
   {id: 10, row: 0, column: 10, name: 'F10', x: 2450, y: 71},
   {id: 11, row: 0, column: 11, name: 'F11', x: 2678, y: 71},
   {id: 12, row: 0, column: 12, name: 'F12', x: 2914, y: 71},
-  {id: 13, row: 0, column: 13, name: 'Power', x: 3136, y: 71},
+  {id: 13, row: 0, column: 13, name: '⌽', x: 3136, y: 71},
 
   // Row 1.
   {id: 14, row: 1, column: 0, name: '~', x: 115, y: 254},
@@ -76,10 +84,10 @@ const KEYS = [
   {id: 24, row: 1, column: 10, name: '0', x: 2359, y: 254},
   {id: 25, row: 1, column: 11, name: '-', x: 2585, y: 254},
   {id: 26, row: 1, column: 12, name: '=', x: 2813, y: 254},
-  {id: 27, row: 1, column: 13, name: 'Delete', x: 3092, y: 254},
+  {id: 27, row: 1, column: 13, name: '⌫', x: 3092, y: 254},
 
   // Row 2.
-  {id: 28, row: 2, column: 0, name: 'Tab', x: 177, y: 474},
+  {id: 28, row: 2, column: 0, name: '⇥', x: 177, y: 474},
   {id: 29, row: 2, column: 1, name: 'q', x: 455, y: 474},
   {id: 30, row: 2, column: 2, name: 'w', x: 679, y: 474},
   {id: 31, row: 2, column: 3, name: 'e', x: 901, y: 474},
@@ -95,7 +103,7 @@ const KEYS = [
   {id: 41, row: 2, column: 13, name: '\\', x: 3148, y: 474},
 
   // Row 3 (home row).
-  {id: 42, row: 3, column: 0, name: 'Caps Lock', x: 196, y: 692},
+  {id: 42, row: 3, column: 0, name: '⇪', x: 196, y: 692},
   {id: 43, row: 3, column: 1, name: 'a', x: 510, y: 692},
   {id: 44, row: 3, column: 2, name: 's', x: 736, y: 692},
   {id: 45, row: 3, column: 3, name: 'd', x: 958, y: 692},
@@ -107,10 +115,10 @@ const KEYS = [
   {id: 51, row: 3, column: 9, name: 'l', x: 2301, y: 692},
   {id: 52, row: 3, column: 10, name: ';', x: 2531, y: 692},
   {id: 53, row: 3, column: 11, name: '\'', x: 2749, y: 692},
-  {id: 54, row: 3, column: 12, name: 'Return', x: 3057, y: 692},
+  {id: 54, row: 3, column: 12, name: '↩', x: 3057, y: 692},
 
   // Row 4.
-  {id: 55, row: 4, column: 0, name: 'Shift (Left)', x: 259, y: 910},
+  {id: 55, row: 4, column: 0, name: '⇧ (Left)', x: 259, y: 910},
   {id: 56, row: 4, column: 1, name: 'z', x: 619, y: 910},
   {id: 57, row: 4, column: 2, name: 'x', x: 843, y: 910},
   {id: 58, row: 4, column: 3, name: 'c', x: 1071, y: 910},
@@ -121,20 +129,20 @@ const KEYS = [
   {id: 63, row: 4, column: 8, name: ',', x: 2191, y: 910},
   {id: 64, row: 4, column: 9, name: '.', x: 2421, y: 910},
   {id: 65, row: 4, column: 10, name: '/', x: 2643, y: 910},
-  {id: 66, row: 4, column: 11, name: 'Shift (Right)', x: 3007, y: 910},
+  {id: 66, row: 4, column: 11, name: '⇧ (Right)', x: 3007, y: 910},
 
   // Row 5 (never analyzed, but here for completeness).
   {id: 67, row: 5, column: 0, name: 'fn', x: 115, y: 1138},
-  {id: 68, row: 5, column: 1, name: 'Control (Left)', x: 333, y: 1138},
-  {id: 68, row: 5, column: 1, name: 'Alt (Left)', x: 565, y: 1138},
-  {id: 68, row: 5, column: 1, name: 'Command (Left)', x: 817, y: 1138},
-  {id: 68, row: 5, column: 1, name: 'Space', x: 1517, y: 1138},
-  {id: 68, row: 5, column: 1, name: 'Command (Right)', x: 2221, y: 1138},
-  {id: 68, row: 5, column: 1, name: 'Alt (Right)', x: 2469, y: 1138},
-  {id: 68, row: 5, column: 1, name: 'Left', x: 2697, y: 1200},  // half-height
-  {id: 68, row: 5, column: 1, name: 'Up', x: 2919, y: 1082}, // half-height
-  {id: 68, row: 5, column: 1, name: 'Down', x: 2919, y: 1200}, // half-height
-  {id: 68, row: 5, column: 1, name: 'Right', x: 3148, y: 1200}, // half-height
+  {id: 68, row: 5, column: 1, name: '⌃ (Left)', x: 333, y: 1138},
+  {id: 68, row: 5, column: 1, name: '⌥ (Left)', x: 565, y: 1138},
+  {id: 68, row: 5, column: 1, name: '⌘ (Left)', x: 817, y: 1138},
+  {id: 68, row: 5, column: 1, name: '␣', x: 1517, y: 1138},
+  {id: 68, row: 5, column: 1, name: '⌘ (Right)', x: 2221, y: 1138},
+  {id: 68, row: 5, column: 1, name: '⌥ (Right)', x: 2469, y: 1138},
+  {id: 68, row: 5, column: 1, name: '←', x: 2697, y: 1200},  // half-height
+  {id: 68, row: 5, column: 1, name: '↑', x: 2919, y: 1082}, // half-height
+  {id: 68, row: 5, column: 1, name: '↓', x: 2919, y: 1200}, // half-height
+  {id: 68, row: 5, column: 1, name: '→', x: 3148, y: 1200}, // half-height
 ];
 
 const FINGER_NAMES = [
@@ -205,24 +213,24 @@ const FINGER_STRENGTHS = [
 const LAYOUTS = {
   Colemak: {
     keys: [
-      /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
-      /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
-      /* Row 2: */ 'Tab', 'q', 'w', 'f', 'p', 'g', 'j', 'l', 'u', 'y', [';', ':'], ['[', '{'], [']', '}'], ['\\', '|'],
-      /* Row 3: */ 'Caps Lock', 'a', 'r', 's', 't', 'd', 'h', 'n', 'e', 'i', 'o', ["'", '"'], 'Return',
-      /* Row 4: */ 'Shift (Left)', 'z', 'x', 'c', 'v', 'b', 'k', 'm', [',', '<'], ['.', '>'], ['/', '?'], 'Shift (Right)',
-      /* Row 5: */ 'fn', 'Control (Left)', 'Alt (Left)', 'Command (Left)', 'Space', 'Command (Right)', 'Alt (Right)', 'Left', 'Up', 'Down', 'Right',
+      /* Row 0: */ '⎋', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', '⌽',
+      /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], '⌫',
+      /* Row 2: */ '⇥', 'q', 'w', 'f', 'p', 'g', 'j', 'l', 'u', 'y', [';', ':'], ['[', '{'], [']', '}'], ['\\', '|'],
+      /* Row 3: */ '⇪', 'a', 'r', 's', 't', 'd', 'h', 'n', 'e', 'i', 'o', ["'", '"'], '↩',
+      /* Row 4: */ '⇧ (Left)', 'z', 'x', 'c', 'v', 'b', 'k', 'm', [',', '<'], ['.', '>'], ['/', '?'], '⇧ (Right)',
+      /* Row 5: */ 'fn', '⌃ (Left)', '⌥ (Left)', '⌘ (Left)', '␣', '⌘ (Right)', '⌥ (Right)', '←', '↑', '↓', '→',
     ],
     name: 'Colemak',
   },
 
   Qwerty: {
     keys: [
-      /* Row 0: */ 'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Power',
-      /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], 'Delete',
-      /* Row 2: */ 'Tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', ['[', '{'], [']', '}'], ['\\', '|'],
-      /* Row 3: */ 'Caps Lock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', [';', ':'], ["'", '"'], 'Return',
-      /* Row 4: */ 'Shift (Left)', 'z', 'x', 'c', 'v', 'b', 'n', 'm', [',', '<'], ['.', '>'], ['/', '?'], 'Shift (Right)',
-      /* Row 5: */ 'fn', 'Control (Left)', 'Alt (Left)', 'Command (Left)', 'Space', 'Command (Right)', 'Alt (Right)', 'Left', 'Up', 'Down', 'Right',
+      /* Row 0: */ '⎋', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', '⌽',
+      /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], '⌫',
+      /* Row 2: */ '⇥', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', ['[', '{'], [']', '}'], ['\\', '|'],
+      /* Row 3: */ '⇪', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', [';', ':'], ["'", '"'], '↩',
+      /* Row 4: */ '⇧ (Left)', 'z', 'x', 'c', 'v', 'b', 'n', 'm', [',', '<'], ['.', '>'], ['/', '?'], '⇧ (Right)',
+      /* Row 5: */ 'fn', '⌃ (Left)', '⌥ (Left)', '⌘ (Left)', '␣', '⌘ (Right)', '⌥ (Right)', '←', '↑', '↓', '→',
     ],
     name: 'Qwerty',
   },
@@ -529,11 +537,11 @@ function getLettersForDisplay(letters: string) {
 
 function getLetterForDisplay(letter: string) {
   if (letter === ' ') {
-    return 'Space';
+    return '␣';
   } else if (letter === '\n') {
-    return 'Return';
+    return '↩';
   } else if (letter === '\t') {
-    return 'Tab';
+    return '⇥';
   } else {
     return letter;
   }
@@ -616,6 +624,12 @@ function getPercentage(
   return (dividend / divisor * 100).toFixed(precision) + '%';
 }
 
+/**
+ * Returns the "fitness" of a layout for typing the corpus represented by
+ * `trigrams`.
+ *
+ * "fitness" corresponds to total typing effort, so lower scores are better.
+ */
 function getFitness(layout: Layout, trigrams: Array): number {
   let totalEffort = 0;
   trigrams.slice(0, 100).forEach(([key, count]) => {
@@ -624,6 +638,179 @@ function getFitness(layout: Layout, trigrams: Array): number {
     totalEffort += total;
   });
   return totalEffort;
+}
+
+/**
+ * Returns the count of keys (pairs of keys) that should be swapped, with some
+ * random probability.
+ */
+function getSwapCount(): number {
+  const random = Math.random();
+  if (random < 0.9) {
+    return 1;
+  } else if (random < 0.99) {
+    return 2;
+  } else {
+    return 3;
+  }
+}
+
+/**
+ * Given a `layout`, generate a digest that serves as (an almost certainly)
+ * unique fingerprint for it, and can be used to detect duplicate layouts.
+ */
+function getLayoutDigest(layout: Layout): string {
+  return layout.keys.reduce((digest, key) => digest + key, '');
+}
+
+/**
+ * Pretty-prints `layout` in human-readable form.
+ */
+function printLayout(layout: Layout): void {
+  let lastRow = null;
+  KEYS.forEach(({row, column}, i) => {
+    const entry = layout.keys[i];
+    const key = Array.isArray(entry) ? entry[0] : entry;
+    if (row !== lastRow) {
+      lastRow = row;
+      if (row) {
+        print('\n');
+      }
+    }
+    if (column) {
+      print('  ');
+    }
+    if (/^F\d+$/.test(key)) {
+      // This makes row 0 too long, but so be it.
+      print(key.slice(0, 3));
+    } else {
+      print(key.slice(0, 1));
+    }
+  });
+  print('\n');
+}
+
+
+function swapKeys(
+  layout: Layout,
+  sourceIndex: number,
+  targetIndex: number
+): void {
+  const temp = layout.keys[targetIndex];
+  layout.keys[targetIndex] = layout.keys[sourceIndex];
+  layout.keys[sourceIndex] = temp;
+}
+
+function checkNoOps(
+  layout: Layout,
+  seen: Object,
+  sourceIndex: number,
+  targetIndex: number
+): boolean {
+  return (sourceIndex !== targetIndex);
+}
+
+function checkDuplicates(
+  layout: Layout,
+  seen: Object,
+  sourceIndex: number,
+  targetIndex: number
+): boolean {
+  // Must apply the mutation in order to get the new digest.
+  const testLayout = {
+    keys: layout.keys.slice(),
+    name: `Test layout ${layoutCounter++}`,
+  };
+  swapKeys(testLayout, sourceIndex, targetIndex);
+  return !seen[getLayoutDigest(testLayout)];
+}
+
+function checkMaskedKeys(
+  layout: Layout,
+  seen: Object,
+  sourceIndex: number,
+  targetIndex: number
+) {
+  return true;
+}
+
+function anneal(iteration: number, iterationCount: number): boolean {
+  return Math.random() > .95;
+}
+
+function now(): number {
+  const [seconds, nanoseconds] = process.hrtime();
+  return seconds + nanoseconds / 1000000000;
+}
+
+function optimize(
+  layout: Layout,
+  sortedTrigrams: Array,
+  iterationCount: number
+): Layout {
+  log(`Optimizing ${layout.name}:`);
+  const start = now();
+  let fitness = getFitness(layout, sortedTrigrams);
+  log(`Starting fitness: ${formatNumber(fitness, 2)}`);
+  const seen = {[getLayoutDigest(layout)]: true};
+  for (let i = 0; i < iterationCount; i++) {
+    let evolvedLayout = evolve(layout, seen);
+    log(`Iteration ${formatNumber(i)}:`);
+    printLayout(evolvedLayout);
+    const evolvedFitness = getFitness(evolvedLayout, sortedTrigrams);
+    print(`Fitness: ${formatNumber(evolvedFitness, 2)} `);
+    if (evolvedFitness < fitness) {
+      log('[better » accepting]');
+      fitness = evolvedFitness;
+      layout = evolvedLayout;
+    } else if (anneal(i, iterationCount)) {
+      log('[worse » accepting]');
+      fitness = evolvedFitness;
+      layout = evolvedLayout;
+    } else {
+      log('[worse » rejecting]');
+    }
+  }
+  log('Final layout:');
+  printLayout(layout);
+  log(`Final fitness: ${formatNumber(fitness, 2)}`);
+  const finish = now();
+  const elapsed = finish - start;
+  console.log(`Elapsed time: ${formatNumber(elapsed, 2)}s`);
+}
+
+/**
+ * Takes `layout` and applies a random mutation to it, returning a new layout.
+ *
+ * Takes a `seen` hash recording which layouts have previously been considered.
+ * Updates the hash.
+ */
+function evolve(layout: Layout, seen: Object): Layout {
+  const evolved = {
+    // NOTE: note a deep clone, so for now we swap shifted/unshifted values of
+    // each key together in lock-step.
+    keys: layout.keys.slice(),
+    name: `Random layout ${layoutCounter++}`,
+  };
+
+  // Will swap 1, 2 or 3 pairs of keys.
+  let swapCount = getSwapCount();
+  while (swapCount) {
+    const sourceIndex = Math.floor(Math.random() * evolved.keys.length);
+    const targetIndex = Math.floor(Math.random() * evolved.keys.length);
+    const valid = [
+      checkNoOps,
+      checkDuplicates,
+      checkMaskedKeys,
+    ].find(validator => validator(evolved, seen, sourceIndex, targetIndex));
+    if (valid) {
+      swapKeys(evolved, sourceIndex, targetIndex);
+      swapCount--;
+    }
+  }
+
+  seen[getLayoutDigest(evolved)] = true;
+  return evolved;
 }
 
 function printCorpusStats(corpus: string) {
@@ -696,7 +883,7 @@ function printCorpusStats(corpus: string) {
         yargs
           .reset()
           .usage('Usage: $0 optimize')
-          .default('iteration-count', 10000)
+          .default('iteration-count', 1000)
           .alias('c', 'iteration-count')
       );
     })
@@ -719,9 +906,7 @@ function printCorpusStats(corpus: string) {
     const corpus = await readFile(corpusPath);
     const {nGrams: trigrams} = getNGramFrequencies(corpus.toString().toLowerCase(), 3);
     const sortedTrigrams = getSortedNGrams(trigrams);
-    log('Comparing Querty and Colemak fitness (lower is better):');
-    log(getFitness(LAYOUTS.Qwerty, sortedTrigrams));
-    log(getFitness(LAYOUTS.Colemak, sortedTrigrams));
+    optimize(LAYOUTS.Qwerty, sortedTrigrams, argv.iterationCount);
   } else {
     yargs.showHelp();
   }
