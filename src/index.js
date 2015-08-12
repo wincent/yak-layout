@@ -252,6 +252,26 @@ function getDistance(a: Key, b: Key): number {
   );
 }
 
+/**
+ * To compute normalized distances, we need to know the maximum distance of a
+ * finger from its home key.
+ */
+const maximumDistanceFromHomeKey = Math.max(...FINGERS_PLACEMENTS.map((placement, i) => {
+  return getDistance(KEYS[i], KEYS[FINGER_HOME_KEYS[placement]]);
+}));
+
+/**
+ * Normalizes `value` within the range defined by `minimum` to `maximum` to a
+ * scale from 0 to 1.
+ */
+function normalize(value: number, minimum: number, maximum: number): number {
+  // Via: http://stats.stackexchange.com/a/70807
+  return (value - minimum) / (maximum - minimum);
+}
+
+function normalizeDistance(distance: number): number {
+  return normalize(distance, 0, maximumDistanceFromHomeKey);
+}
 
 /**
  * Adjusts the score of a trigram according to any "rolls" that may be present
@@ -316,7 +336,7 @@ function getPositionMultiplier(trigram: string, layout): number {
   const fingers = keys.map(key => FINGERS_PLACEMENTS[key]);
   return fingers.reduce((multiplier, finger, i) => {
     const distance = getDistance(KEYS[keys[i]], KEYS[FINGER_HOME_KEYS[finger]]);
-    return multiplier * (distance + 1);
+    return multiplier * (normalizeDistance(distance) + 1);
   }, 1);
 }
 
