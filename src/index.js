@@ -145,6 +145,18 @@ const KEYS = [
   {id: 68, row: 5, column: 1, name: '→', x: 3148, y: 1200}, // half-height
 ];
 
+/**
+ * Keys marked with a 1 won't be considered for moves.
+ */
+const MASK = [
+  /* Row 1: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  /* Row 1: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  /* Row 2: */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+  /* Row 3: */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+  /* Row 4: */ 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+  /* Row 1: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+];
+
 const FINGER_NAMES = [
   /* 0 */ 'Left Pinkie',
   /* 1 */ 'Left Ring Finger',
@@ -731,6 +743,10 @@ function checkMaskedKeys(
   sourceIndex: number,
   targetIndex: number
 ) {
+  return (
+    MASK[sourceIndex] !== 1 &&
+    MASK[targetIndex] !== 1
+  );
   return true;
 }
 
@@ -802,7 +818,7 @@ function evolve(layout: Layout, seen: Object): Layout {
       checkNoOps,
       checkDuplicates,
       checkMaskedKeys,
-    ].find(validator => validator(evolved, seen, sourceIndex, targetIndex));
+    ].every(validator => validator(evolved, seen, sourceIndex, targetIndex));
     if (valid) {
       swapKeys(evolved, sourceIndex, targetIndex);
       swapCount--;
