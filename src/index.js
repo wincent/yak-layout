@@ -287,6 +287,12 @@ const maximumDistanceOnSameFinger = KEYS.reduce((max, key, i) => {
 }, 0);
 
 /**
+ * And biggest distance between keys on the keyboard (as a pretty good
+ * approximation, using the top-left and bottom-left keys).
+ */
+const maximumDistanceBetweenKeys = getDistance(KEYS[0], KEYS[KEYS.length - 1]);
+
+/**
  * Normalizes `value` within the range defined by `minimum` to `maximum` to a
  * scale from 0 to 1.
  */
@@ -300,14 +306,52 @@ function normalize(value: number, minimum: number, maximum: number): number {
  * in it.
  *
  * - Inward rolls are favorable, so get strongly boosted.
- * - Outward rolls are less so, so get boosted weakly.
+ * - Outward rolls are unfavorable, so get penalized weakly.
  * - 2-letter rolls that combine alternation score more highly than 2-letter
  *   rolls followed (or preceded) by a key-press on the same hand.
- * - Tighter rolls (ie. ones with minimal column or row jumps) score more
- *   favorably.
+ * - Tighter rolls (ie. ones with less distance) score more favorably.
  */
 function getRollMultiplier(trigram: string, layout: Layout): number {
-  return 1;
+  const map = getLayoutLookupMap(layout);
+  const letters = trigram.split('');
+  const keys = letters.map(letter => KEYS[map[letter].index]);
+
+  let handAlternations = 0;
+  let inwardRolls = 0;
+  let outwardRolls = 0;
+
+  for (let i = 1; i < keys.length; i++) {
+    const fingerA = FINGERS_PLACEMENTS[keys[i - 1].id];
+    const fingerB = FINGERS_PLACEMENTS[keys[i].id];
+    const columnA = keys[i - 1].column;
+    const columnB = keys[i].column;
+    if (fingerA === fingerB) {
+      continue;
+    } else if (
+      fingerA <= 4 && fingerB >= 5 ||
+      fingerA >= 5 && fingerB <= 4
+    ) {
+      handAlternations++;
+    } else if (
+      columnA < columnB && fingerB <= 4 ||
+      columnA > columnB && fingerA >= 5
+    ) {
+      const distance = getDistance(keys[i - 1], keys[i]);
+      inwardRolls += 1 - normalize(distance, 0, maximumDistanceBetweenKeys);
+    } else if (
+      columnA > columnB && fingerB <= 4 ||
+      columnA < columnB && fingerA >= 5
+    ) {
+      const distance = getDistance(keys[i - 1], keys[i]);
+      outwardRolls += 1 - normalize(distance, 0, maximumDistanceBetweenKeys);
+    }
+  }
+  return (
+    1 +
+    (handAlternations ? handAlternations * -0.1 : 0) +
+    (outwardRolls ? outwardRolls * 0.1 : 0) +
+    (inwardRolls ? inwardRolls * -0.3 : 0)
+  );
 }
 
 /**
@@ -326,16 +370,6 @@ function getRowJumpMultiplier(trigram: string, layout: Layout): number {
   const maximumJump = 10; // Worst case is is row 0 -> row 5 -> row 0.
   const dampener = 0.5; // We don't want this to overwhelm roll boost.
   return 1 + normalize(rowsJumped, 0, maximumJump) * dampener;
-}
-
-/**
- * Adjusts the score of a trigram according to any contained column jumps.
- *
- * Small row jumps can be favorable (see `getRollMultiplier`), but large jumps,
- * or jumps involving the same finger, can be costly.
- */
-function getColumnJumpMultiplier(trigram: string, layout: Layout): number {
-  return 1;
 }
 
 /**
@@ -412,7 +446,6 @@ function scoreTrigram(trigram: string, layout: Layout) {
   return [
     getRollMultiplier,
     getRowJumpMultiplier,
-    getColumnJumpMultiplier,
     getSameFingerMultiplier,
     getPositionMultiplier,
     getFingerMultiplier,
