@@ -347,7 +347,7 @@ function getSameFingerMultiplier(trigram: string, layout: Layout): number {
       const distance = normalize(
         getDistance(KEYS[key], KEYS[keys[i - 1]]), 0, maximumDistanceOnSameFinger
       );
-      return multiplier * (1 - distance);
+      return multiplier * (distance + 1);
     } else {
       // Different fingers; not our concern here.
       return multiplier;
