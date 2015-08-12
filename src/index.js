@@ -481,7 +481,14 @@ function printLayoutStats(layout: Layout, corpus: string) {
 
   printHeading('Hand utilization:');
   const hands = sortedCounts.reduce((hands, [finger, count]) => {
-    const hand = finger <= 4 ? 'left' : 'right';
+    let hand;
+    if (finger < 4) {
+      hand = 'left';
+    } else if (finger > 5) {
+      hand = 'right';
+    } else {
+      return hands;
+    }
     hands[hand] = hands[hand] || 0;
     hands[hand] += count;
     return hands;
