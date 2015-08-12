@@ -508,7 +508,6 @@ function printLayoutStats(layout: Layout, corpus: string) {
     log(`${getLettersForDisplay(key)}: ${formatNumber(count)} (${percentage}) [score: ${formatNumber(score, 4)}, total: ${formatNumber(total)}]`);
   });
   log(`Total effort: ${formatNumber(totalEffort)}`);
-
 }
 
 const HEADING =
@@ -617,6 +616,16 @@ function getPercentage(
   return (dividend / divisor * 100).toFixed(precision) + '%';
 }
 
+function getFitness(layout: Layout, trigrams: Array): number {
+  let totalEffort = 0;
+  trigrams.slice(0, 100).forEach(([key, count]) => {
+    const score = scoreTrigram(key, layout);
+    const total = score * count;
+    totalEffort += total;
+  });
+  return totalEffort;
+}
+
 function printCorpusStats(corpus: string) {
   log(`Corpus length: ${formatNumber(corpus.length)} bytes`);
 
@@ -661,6 +670,9 @@ function printCorpusStats(corpus: string) {
     .command('layout-stats', 'show layout stats', yargs => {
       // TODO: something?
     })
+    .command('optimize', 'produce optimized keyboard layout', yargs => {
+      // TODO: something here; eg optional iteration count etc
+    })
     .help('h')
     .alias('h', 'help')
     .version(json.version)
@@ -679,6 +691,14 @@ function printCorpusStats(corpus: string) {
     const corpus = await readFile(corpusPath);
     printLayoutStats(LAYOUTS.Qwerty, corpus.toString().toLowerCase());
     printLayoutStats(LAYOUTS.Colemak, corpus.toString().toLowerCase());
+  } else if (command === 'optimize') {
+    const corpusPath = path.join('yak', 'corpus.txt');
+    const corpus = await readFile(corpusPath);
+    const {nGrams: trigrams} = getNGramFrequencies(corpus.toString().toLowerCase(), 3);
+    const sortedTrigrams = getSortedNGrams(trigrams);
+    log('Comparing Querty and Colemak fitness (lower is better):');
+    log(getFitness(LAYOUTS.Qwerty, sortedTrigrams));
+    log(getFitness(LAYOUTS.Colemak, sortedTrigrams));
   } else {
     yargs.showHelp();
   }
