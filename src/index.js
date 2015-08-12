@@ -508,11 +508,15 @@ function printLayoutStats(layout: Layout, corpus: string) {
   printHeading('Effort (per trigram):');
   const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
   const sortedTrigrams = getSortedNGrams(trigrams);
+  let totalEffort = 0;
   sortedTrigrams.slice(0, 50).forEach(([key, count]) => {
     const percentage = getPercentage(count, totalCount);
-    const score = formatNumber(scoreTrigram(key, layout), 4);
-    log(`${getLettersForDisplay(key)}: ${formatNumber(count)} (${percentage}) [score: ${score}]`);
+    const score = scoreTrigram(key, layout);
+    const total = score * count;
+    totalEffort += total;
+    log(`${getLettersForDisplay(key)}: ${formatNumber(count)} (${percentage}) [score: ${formatNumber(score, 4)}, total: ${formatNumber(total)}]`);
   });
+  log(`Total effort: ${formatNumber(totalEffort)}`);
 
 }
 
