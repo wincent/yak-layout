@@ -1,6 +1,6 @@
 {
   "name": "yak-layout",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Keyboard layout optimizer",
   "main": "dist/index.js",
   "scripts": {
@@ -29,7 +29,6 @@
   "homepage": "https://github.com/wincent/yak-layout",
   "devDependencies": {
     "babel": "5.8.20",
-    "babel-core": "5.8.20",
     "babel-eslint": "4.0.5",
     "eslint": "1.0.0",
     "expect": "1.8.0",
@@ -43,6 +42,7 @@
     "sinon": "1.15.4"
   },
   "dependencies": {
+    "babel-core": "5.8.20",
     "bluebird": "2.9.34",
     "yargs": "3.18.0"
   }
