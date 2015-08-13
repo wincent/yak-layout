@@ -812,6 +812,7 @@ function optimize(
  * Updates the hash.
  */
 function evolve(layout: Layout, seen: Object): Layout {
+  const start = now();
   const evolved = {
     // NOTE: note a deep clone, so for now we swap shifted/unshifted values of
     // each key together in lock-step.
@@ -821,7 +822,9 @@ function evolve(layout: Layout, seen: Object): Layout {
 
   // Will swap 1, 2 or 3 pairs of keys.
   let swapCount = getSwapCount();
+  let attemptCount = 0;
   while (swapCount) {
+    attemptCount++;
     const sourceIndex = Math.floor(Math.random() * evolved.keys.length);
     const targetIndex = Math.floor(Math.random() * evolved.keys.length);
     const valid = [
@@ -832,10 +835,14 @@ function evolve(layout: Layout, seen: Object): Layout {
     if (valid) {
       swapKeys(evolved, sourceIndex, targetIndex);
       swapCount--;
+    } else if (attemptCount > 1000 && attemptCount % 100 === 0) {
+      log(`Potential deadlock in evolve() (${formatNumber(attemptCount)} attempts`);
     }
   }
 
+  const finish = now();
   seen[getLayoutDigest(evolved)] = true;
+  log(`Evolved layout in ${formatNumber(finish - start, 6)}s`);
   return evolved;
 }
 
