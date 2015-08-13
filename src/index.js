@@ -457,6 +457,14 @@ function getFingerMultiplier(trigram: string, layout: Layout): number {
   ), 1);
 }
 
+const SCORE_MULTIPLIERS = [
+  getRollMultiplier,
+  getRowJumpMultiplier,
+  getSameFingerMultiplier,
+  getPositionMultiplier,
+  getFingerMultiplier,
+];
+
 /**
  * Calculates an effort score for the provided `trigram`. Lower scores are
  * better.
@@ -466,13 +474,8 @@ function getFingerMultiplier(trigram: string, layout: Layout): number {
  * particular factor such as finger strength or row jumps etc.
  */
 function scoreTrigram(trigram: string, layout: Layout) {
-  return [
-    getRollMultiplier,
-    getRowJumpMultiplier,
-    getSameFingerMultiplier,
-    getPositionMultiplier,
-    getFingerMultiplier,
-  ].reduce((score, scorer) => score * scorer(trigram, layout), 1);
+  return SCORE_MULTIPLIERS
+    .reduce((score, scorer) => score * scorer(trigram, layout), 1);
 }
 
 function getSortedFingerCounts(fingerCounts) {
@@ -531,6 +534,17 @@ function printLayoutStats(layout: Layout, corpus: string) {
     log(`${getLettersForDisplay(key)}: ${formatNumber(count)} (${percentage}) [score: ${formatNumber(score, 4)}, total: ${formatNumber(total)}]`);
   });
   log(`Total effort: ${formatNumber(totalEffort)}`);
+
+  printHeading('Summary:');
+  SCORE_MULTIPLIERS.forEach(multiplier => {
+    let overallCount = 0;
+    const total = sortedTrigrams.slice(0, 50).reduce((total, [key, count]) => {
+      const score = multiplier(key, layout);
+      overallCount += count;
+      return total + score * count;
+    }, 0);
+    log(`${multiplier.name}: ${formatNumber(total / overallCount, 4)}`);
+  });
 }
 
 const HEADING =
@@ -814,7 +828,7 @@ function optimize(
 function evolve(layout: Layout, seen: Object): Layout {
   const start = now();
   const evolved = {
-    // NOTE: note a deep clone, so for now we swap shifted/unshifted values of
+    // NOTE: not a deep clone, so for now we swap shifted/unshifted values of
     // each key together in lock-step.
     keys: layout.keys.slice(),
     name: `Random layout ${layoutCounter++}`,
