@@ -30,8 +30,8 @@ fn ⌃  ⌥  ⌘  ␣  ⌘  ⌥  ←  ↑  ↓  →
   using pinkie fingers for anything, so the model should reflect that reality).
 - The genetic algorithm should take cues from Martin Krzywinski's excellent work
   on the [carpalx project](http://mkweb.bcgsc.ca/carpalx/?colemak), but it
-  should be feature a multi-factor fitness model that goes beyond carpalx's
-  three factors (base, penalty and stroke path).
+  should feature a multi-factor fitness model that goes beyond carpalx's three
+  factors (base, penalty and stroke path).
 
 ## Why a new keyboard layout?
 
