@@ -160,6 +160,15 @@ const MASK = [
   /* Row 5: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 ];
 
+const ROWS = [
+  /* Row 0: */ 'F-keys',
+  /* Row 1: */ 'Number',
+  /* Row 2: */ 'Top',
+  /* Row 3: */ 'Middle',
+  /* Row 4: */ 'Bottom',
+  /* Row 5: */ 'Modifers/Space',
+];
+
 const FINGER_NAMES = [
   /* 0 */ 'Left Pinkie',
   /* 1 */ 'Left Ring Finger',
@@ -488,6 +497,7 @@ function printLayoutStats(layout: Layout, corpus: string) {
   printHeading(`${layout.name} layout stats:`);
   let totalCount = 0;
   const fingerCounts = {};
+  const rowCounts = {};
   const map = getLayoutLookupMap(layout);
   const unigrams = corpus.split('').filter(letter => N_GRAM_REGEXP.test(letter));
   unigrams.forEach(letter => {
@@ -495,6 +505,9 @@ function printLayoutStats(layout: Layout, corpus: string) {
     const fingerIndex = FINGERS_PLACEMENTS[keyIndex.index]; // Ignore Shift for now.
     fingerCounts[fingerIndex] = fingerCounts[fingerIndex] || 0;
     fingerCounts[fingerIndex]++;
+    const row = KEYS[keyIndex.index].row;
+    rowCounts[row] = rowCounts[row] || 0;
+    rowCounts[row]++;
     totalCount++;
   });
 
@@ -521,6 +534,14 @@ function printLayoutStats(layout: Layout, corpus: string) {
   }, {});
   log(`Left: ${formatNumber(hands.left)} (${getPercentage(hands.left, totalCount)})`);
   log(`Right: ${formatNumber(hands.right)} (${getPercentage(hands.right, totalCount)})`);
+
+  printHeading('Row usage:');
+  Object.keys(rowCounts)
+    .sort((a, b) => rowCounts[a] < rowCounts[b])
+    .forEach(row => {
+      const description = ROWS[row];
+      log(`Row ${row} (${description}): ${formatNumber(rowCounts[row])} (${getPercentage(rowCounts[row], totalCount)})`);
+    });
 
   printHeading('Effort (per trigram):');
   const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
