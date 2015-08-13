@@ -493,6 +493,62 @@ function getSortedFingerCounts(fingerCounts) {
     .map(finger => [finger, fingerCounts[finger]]);
 }
 
+function repeat(string: string, length: number): string {
+  while (string.length < length) {
+    string += string;
+  }
+  return string.slice(0, length);
+}
+
+function leftAlign(string: string, width: number): string {
+  if (string.length < width) {
+    return string + repeat(' ', width - string.length);
+  } else {
+    return string.slice(0, width);
+  }
+}
+
+function rightAlign(string: string, width: number): string {
+  if (string.length < width) {
+    return repeat(' ', width - string.length) + string;
+  } else {
+    return string.slice(0, width);
+  }
+}
+
+function getBar(count: number, total: number, width: number): string {
+  return (
+    '|' +
+    repeat('-', Math.floor(count / total * width)) +
+    'o' +
+    repeat(' ', Math.floor((total - count) / total * width)) +
+    '|'
+  );
+}
+
+function printHistogram(
+  rows: Array<{label: string, count: number}>,
+  total: number
+): void {
+  const terminalWidth = process.stdout.columns || 80;
+  const labelWidth = Math.max(...rows.map(row => row.label.length)) + 2;
+  const counts = rows.map(row => formatNumber(row.count));
+  const countWidth = Math.max(...counts.map(count => count.length)) + 1;
+  const percentages = rows.map(row => getPercentage(row.count, total));
+  const percentageWidth = Math.max(...percentages.map(percentage => percentage.length)) + 3;
+  const barWidth = Math.max(
+    10,
+    Math.min(80, terminalWidth - labelWidth - countWidth - percentageWidth - 2)
+  );
+
+  rows.forEach((row, i) => {
+    print(rightAlign(`${row.label}: `, labelWidth));
+    print(rightAlign(`${counts[i]} `, countWidth));
+    print(leftAlign(`(${percentages[i]}) `, percentageWidth));
+    log(getBar(row.count, total, barWidth));
+  });
+}
+
 function printLayoutStats(layout: Layout, corpus: string) {
   printHeading(`${layout.name} layout stats:`);
   let totalCount = 0;
@@ -512,16 +568,19 @@ function printLayoutStats(layout: Layout, corpus: string) {
   });
 
   printHeading('Finger utilization:');
-  Object.keys(fingerCounts).forEach(finger => {
-    const count = fingerCounts[finger];
-    const percentage = getPercentage(count, totalCount);
-    log(`${FINGER_NAMES[finger]}: ${formatNumber(count)} (${percentage})`);
-  });
+  printHistogram(
+    Object.keys(fingerCounts).map(finger => ({
+      label: FINGER_NAMES[finger],
+      count: fingerCounts[finger],
+    })),
+    totalCount
+  );
 
   printHeading('Hand utilization:');
   const hands = Object.keys(fingerCounts).reduce((hands, finger) => {
     const count = fingerCounts[finger];
     let hand;
+    // Exclude the thumb.
     if (finger < 4) {
       hand = 'left';
     } else if (finger > 5) {
@@ -533,15 +592,21 @@ function printLayoutStats(layout: Layout, corpus: string) {
     hands[hand] += count;
     return hands;
   }, {});
-  log(`Left: ${formatNumber(hands.left)} (${getPercentage(hands.left, totalCount)})`);
-  log(`Right: ${formatNumber(hands.right)} (${getPercentage(hands.right, totalCount)})`);
+  printHistogram([
+      {label: 'Left', count: hands.left},
+      {label: 'Right', count: hands.right},
+    ],
+    totalCount
+  );
 
   printHeading('Row usage:');
-  Object.keys(rowCounts)
-    .forEach(row => {
-      const description = ROWS[row];
-      log(`Row ${row} (${description}): ${formatNumber(rowCounts[row])} (${getPercentage(rowCounts[row], totalCount)})`);
-    });
+  printHistogram(
+    Object.keys(rowCounts).map(row => ({
+      label: `Row ${row} (${ROWS[row]})`,
+      count: rowCounts[row],
+    })),
+    totalCount
+  );
 
   printHeading('Effort (per trigram):');
   const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
