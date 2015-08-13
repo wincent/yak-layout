@@ -52,7 +52,7 @@ function print(string: string): void {
  * based on this image:
  *
  * https://support.apple.com/library/content/dam/edam/applecare/images/en_US/keyboards/english_notebook.png
-*/
+ */
 const KEYS = [
   // Row 0.
   {id: 0, row: 0, column: 0, name: '⎋', x: 126, y: 71},
