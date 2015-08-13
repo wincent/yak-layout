@@ -791,6 +791,8 @@ function optimize(
   log(`Optimizing ${layout.name}:`);
   const start = now();
   let fitness = getFitness(layout, sortedTrigrams);
+  let bestFitness = fitness;
+  let bestLayout = layout;
   log(`Starting fitness: ${formatNumber(fitness, 2)}`);
   const seen = {[getLayoutDigest(layout)]: true};
   for (let i = 0; i < iterationCount; i++) {
@@ -810,10 +812,15 @@ function optimize(
     } else {
       log('[worse » rejecting]');
     }
+
+    if (fitness < bestFitness) {
+      bestFitness = fitness;
+      bestLayout = layout;
+    }
   }
   log('Final layout:');
-  printLayout(layout);
-  log(`Final fitness: ${formatNumber(fitness, 2)}`);
+  printLayout(bestLayout);
+  log(`Final fitness: ${formatNumber(bestFitness, 2)}`);
   const finish = now();
   const elapsed = finish - start;
   console.log(`Elapsed time: ${formatNumber(elapsed, 2)}s`);
