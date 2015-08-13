@@ -371,9 +371,9 @@ function getRollMultiplier(trigram: string, layout: Layout): number {
   }
   return (
     1 +
-    (handAlternations ? handAlternations * -0.1 : 0) +
-    (outwardRolls ? outwardRolls * 0.1 : 0) +
-    (inwardRolls ? inwardRolls * -0.3 : 0)
+    (handAlternations ? handAlternations * -0.2 : 0) +
+    (outwardRolls ? outwardRolls * 0.2 : 0) +
+    (inwardRolls ? inwardRolls * -0.5 : 0)
   );
 }
 
