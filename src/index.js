@@ -789,7 +789,7 @@ function optimize(
       log('[better » accepting]');
       fitness = evolvedFitness;
       layout = evolvedLayout;
-    } else if (anneal(i, iterationCount)) {
+    } else if (anneal(evolvedFitness - fitness, i, iterationCount)) {
       log('[worse » accepting]');
       fitness = evolvedFitness;
       layout = evolvedLayout;
