@@ -9,7 +9,7 @@
 
 'use strict';
 
-import 'babel/polyfill';
+import 'babel-core/polyfill';
 
 import Promise from 'bluebird';
 import fs from 'fs';
