@@ -511,15 +511,16 @@ function printLayoutStats(layout: Layout, corpus: string) {
     totalCount++;
   });
 
-  const sortedCounts = getSortedFingerCounts(fingerCounts);
   printHeading('Finger utilization:');
-  sortedCounts.forEach(([finger, count]) => {
+  Object.keys(fingerCounts).forEach(finger => {
+    const count = fingerCounts[finger];
     const percentage = getPercentage(count, totalCount);
     log(`${FINGER_NAMES[finger]}: ${formatNumber(count)} (${percentage})`);
   });
 
   printHeading('Hand utilization:');
-  const hands = sortedCounts.reduce((hands, [finger, count]) => {
+  const hands = Object.keys(fingerCounts).reduce((hands, finger) => {
+    const count = fingerCounts[finger];
     let hand;
     if (finger < 4) {
       hand = 'left';
@@ -537,7 +538,6 @@ function printLayoutStats(layout: Layout, corpus: string) {
 
   printHeading('Row usage:');
   Object.keys(rowCounts)
-    .sort((a, b) => rowCounts[a] < rowCounts[b])
     .forEach(row => {
       const description = ROWS[row];
       log(`Row ${row} (${description}): ${formatNumber(rowCounts[row])} (${getPercentage(rowCounts[row], totalCount)})`);
