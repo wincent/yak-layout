@@ -147,12 +147,15 @@ const KEYS = [
 
 /**
  * Keys marked with a 1 won't be considered for moves.
+ *
+ * For now, only consider moving letters, except for "A", which I want to stay
+ * right where it is because its my tmux prefix.
  */
 const MASK = [
   /* Row 1: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   /* Row 1: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   /* Row 2: */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
-  /* Row 3: */ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+  /* Row 3: */ 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
   /* Row 4: */ 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
   /* Row 1: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 ];
