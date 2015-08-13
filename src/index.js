@@ -882,8 +882,11 @@ function optimize(
   log(`Starting fitness: ${formatNumber(fitness, 2)}`);
   const seen = {[getLayoutDigest(layout)]: true};
   for (let i = 0; i < iterationCount; i++) {
-    let evolvedLayout = evolve(layout, seen);
     log(`Iteration ${formatNumber(i)}:`);
+    let evolvedLayout = evolve(layout, seen);
+    if (!evolvedLayout) {
+      continue;
+    }
     printLayout(evolvedLayout);
     const evolvedFitness = getFitness(evolvedLayout, sortedTrigrams);
     print(`Fitness: ${formatNumber(evolvedFitness, 2)} `);
@@ -918,7 +921,7 @@ function optimize(
  * Takes a `seen` hash recording which layouts have previously been considered.
  * Updates the hash.
  */
-function evolve(layout: Layout, seen: Object): Layout {
+function evolve(layout: Layout, seen: Object): ?Layout {
   const start = now();
   const evolved = {
     // NOTE: not a deep clone, so for now we swap shifted/unshifted values of
@@ -942,8 +945,9 @@ function evolve(layout: Layout, seen: Object): Layout {
     if (valid) {
       swapKeys(evolved, sourceIndex, targetIndex);
       swapCount--;
-    } else if (attemptCount > 1000 && attemptCount % 100 === 0) {
-      log(`Potential deadlock in evolve() (${formatNumber(attemptCount)} attempts`);
+    } else if (attemptCount > 1000) {
+      log(`Likely deadlock in evolve() (bailing)`);
+      return null;
     }
   }
 
