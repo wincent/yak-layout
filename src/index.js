@@ -235,7 +235,7 @@ const FINGER_STRENGTHS = [
  * unshifted version and the second element being the shifted version).
  */
 const LAYOUTS = {
-  Colemak: {
+  COLEMAK: {
     keys: [
       /* Row 0: */ '⎋', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', '⌽',
       /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], '⌫',
@@ -247,7 +247,7 @@ const LAYOUTS = {
     name: 'Colemak',
   },
 
-  Qwerty: {
+  QWERTY: {
     keys: [
       /* Row 0: */ '⎋', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', '⌽',
       /* Row 1: */ ['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+'], '⌫',
@@ -922,7 +922,6 @@ function optimize(
  * Updates the hash.
  */
 function evolve(layout: Layout, seen: Object): ?Layout {
-  const start = now();
   const evolved = {
     // NOTE: not a deep clone, so for now we swap shifted/unshifted values of
     // each key together in lock-step.
@@ -951,9 +950,7 @@ function evolve(layout: Layout, seen: Object): ?Layout {
     }
   }
 
-  const finish = now();
   seen[getLayoutDigest(evolved)] = true;
-  log(`Evolved layout in ${formatNumber(finish - start, 6)}s`);
   return evolved;
 }
 
@@ -991,6 +988,16 @@ function printCorpusStats(corpus: string) {
   log(overview);
 }
 
+function getRandomLayout(): Layout {
+  let layout = LAYOUTS.QWERTY;
+  console.log('Creating random layout...');
+  const seen = {[getLayoutDigest(layout)]: true};
+  for (let i = 0; i < 1000; i++) {
+    layout = evolve(layout, seen);
+  }
+  return layout;
+}
+
 (async function() {
   const json = require('../package');
 
@@ -1015,7 +1022,6 @@ function printCorpusStats(corpus: string) {
     })
     .command('help', 'Show help')
     .command('layout-stats', 'show layout stats', yargs => {
-      // TODO: want to show stats for a specific layout here
       argv = common(
         yargs
           .reset()
@@ -1026,7 +1032,7 @@ function printCorpusStats(corpus: string) {
       argv = common(
         yargs
           .reset()
-          .usage('Usage: $0 optimize')
+          .usage('Usage: $0 optimize [layout]')
           .default('iteration-count', 10000)
           .alias('c', 'iteration-count')
       );
@@ -1034,23 +1040,38 @@ function printCorpusStats(corpus: string) {
     .demand(1, 'must provide a valid command')
   );
 
+  async function getCorpus(): string {
+    const corpusPath = path.join('yak', 'corpus.txt');
+    const corpus = await readFile(corpusPath);
+    return corpus.toString().toLowerCase();
+  }
+
   const command = argv._[0];
 
   if (command === 'corpus-stats') {
-    const corpusPath = path.join('yak', 'corpus.txt');
-    const corpus = await readFile(corpusPath);
-    printCorpusStats(corpus.toString().toLowerCase());
+    printCorpusStats(await getCorpus());
   } else if (command === 'layout-stats') {
-    const corpusPath = path.join('yak', 'corpus.txt');
-    const corpus = await readFile(corpusPath);
-    printLayoutStats(LAYOUTS.Qwerty, corpus.toString().toLowerCase());
-    printLayoutStats(LAYOUTS.Colemak, corpus.toString().toLowerCase());
+    const corpus = await getCorpus();
+    const layout = (argv._[1] || 'QWERTY').toUpperCase();
+    if (!(layout in LAYOUTS)) {
+      throw new Error(`Unknown layout: ${layout}`);
+    }
+    printLayoutStats(LAYOUTS[layout], corpus);
   } else if (command === 'optimize') {
-    const corpusPath = path.join('yak', 'corpus.txt');
-    const corpus = await readFile(corpusPath);
-    const {nGrams: trigrams} = getNGramFrequencies(corpus.toString().toLowerCase(), 3);
+    const corpus = await getCorpus();
+    const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
     const sortedTrigrams = getSortedNGrams(trigrams);
-    optimize(LAYOUTS.Qwerty, sortedTrigrams, argv.iterationCount);
+    let layout;
+    if (argv._[1]) {
+      layout = argv._[1].toUpperCase();
+      if (!(layout in LAYOUTS)) {
+        throw new Error(`Unknown layout: ${layout}`);
+      }
+      layout = LAYOUTS[layout];
+    } else {
+      layout = getRandomLayout();
+    }
+    optimize(layout, sortedTrigrams, argv.iterationCount);
   } else {
     yargs.showHelp();
   }
