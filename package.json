@@ -41,6 +41,9 @@
     "mocha": "2.2.5",
     "sinon": "1.15.4"
   },
+  "engines": {
+    "node": "> 3.0.0"
+  },
   "dependencies": {
     "babel-core": "5.8.20",
     "bluebird": "2.9.34",
