@@ -148,7 +148,7 @@ keys don't have the desired spatial configuration, they _are_ at least close to
 one another, and I have the option of using a tool like
 [Karabiner](https://pqrs.org/osx/karabiner/) to end-run around the problem and
 define an alternate layer that brings the cursor keys onto the home row whenever
-I hit dead key or hold down Alt.
+I hit a dead key or hold down Alt.
 
 So, I decided to switch to Colemak, build the layout optimizer for fun, and
 throw a good-but-not-perfect corpus at it (ie. I was going to skip the
