@@ -149,7 +149,7 @@ const KEYS = [
  * Keys marked with a 1 won't be considered for moves.
  *
  * For now, only consider moving letters, except for "A", which I want to stay
- * right where it is because its my tmux prefix.
+ * right where it is because it's my tmux prefix.
  */
 const MASK = [
   /* Row 0: */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -320,7 +320,7 @@ const maximumDistanceOnSameFinger = KEYS.reduce((max, key, i) => {
 
 /**
  * And biggest distance between keys on the keyboard (as a pretty good
- * approximation, using the top-left and bottom-left keys).
+ * approximation, using the top-left and bottom-right keys).
  */
 const maximumDistanceBetweenKeys = getDistance(KEYS[0], KEYS[KEYS.length - 1]);
 
