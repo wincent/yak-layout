@@ -555,7 +555,7 @@ function printLayoutStats(layout: Layout, corpus: string) {
   const fingerCounts = {};
   const rowCounts = {};
   const map = getLayoutLookupMap(layout);
-  const unigrams = corpus.split('').filter(letter => N_GRAM_REGEXP.test(letter));
+  const unigrams = corpus.split('').filter(letter => getNGramRegExp().test(letter));
   unigrams.forEach(letter => {
     const keyIndex = map[getLetterForDisplay(letter)];
     const fingerIndex = FINGERS_PLACEMENTS[keyIndex.index]; // Ignore Shift for now.
@@ -680,8 +680,14 @@ const N_GRAM_CHARACTER_CLASS = '[' + escapeRegExp(getPrintableASCII()) + ']';
 const N_GRAM_REGEXP = new RegExp('^' + N_GRAM_CHARACTER_CLASS + '+$', 'gi');
 const WHITESPACE_REGEXP = new RegExp('[ \t\n]');
 
+function getNGramRegExp() {
+  // Avoid JavaScript RegExp treachery.
+  N_GRAM_REGEXP.lastIndex = 0;
+  return N_GRAM_REGEXP;
+}
+
 function isValidNGram(nGram: string): boolean {
-  return !WHITESPACE_REGEXP.test(nGram) && N_GRAM_REGEXP.test(nGram);
+  return !WHITESPACE_REGEXP.test(nGram) && getNGramRegExp().test(nGram);
 }
 
 function getNGramFrequencies(
@@ -1043,7 +1049,7 @@ function getRandomLayout(): Layout {
   async function getCorpus(): string {
     const corpusPath = path.join('yak', 'corpus.txt');
     const corpus = await readFile(corpusPath);
-    return corpus.toString().toLowerCase();
+    return corpus.toString().trim().toLowerCase();
   }
 
   const command = argv._[0];
