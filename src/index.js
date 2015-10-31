@@ -1040,6 +1040,10 @@ function getRandomLayout(): Layout {
           .usage('Usage: $0 optimize [layout]')
           .default('iteration-count', 10000)
           .alias('c', 'iteration-count')
+          .describe('c', 'iterations per round')
+          .default('rounds', 0)
+          .alias('r', 'rounds')
+          .describe('r', 'perform multiple rounds of optimization')
       );
     })
     .demand(1, 'must provide a valid command')
@@ -1063,9 +1067,6 @@ function getRandomLayout(): Layout {
     }
     printLayoutStats(LAYOUTS[layout], corpus);
   } else if (command === 'optimize') {
-    const corpus = await getCorpus();
-    const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
-    const sortedTrigrams = getSortedNGrams(trigrams);
     let layout;
     if (argv._[1]) {
       layout = argv._[1].toUpperCase();
@@ -1076,7 +1077,18 @@ function getRandomLayout(): Layout {
     } else {
       layout = getRandomLayout();
     }
-    optimize(layout, sortedTrigrams, argv.iterationCount);
+    const corpus = await getCorpus();
+    const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
+    const sortedTrigrams = getSortedNGrams(trigrams);
+    if (argv.rounds) {
+      for (let i = 0; i < argv.rounds; i++) {
+        optimize(layout, sortedTrigrams, argv.iterationCount);
+        log(`Finished round ${i + 1} of ${argv.rounds}`);
+      }
+    } else {
+      // Not in batch mode; just do a single run, ignoring disk.
+      optimize(layout, sortedTrigrams, argv.iterationCount);
+    }
   } else {
     yargs.showHelp();
   }
