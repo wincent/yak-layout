@@ -783,6 +783,10 @@ function getLayoutDigest(layout: Layout): string {
   return layout.keys.reduce((digest, key) => digest + key, '');
 }
 
+function id(layout: Layout): string {
+  return JSON.stringify(layout.keys);
+}
+
 /**
  * Pretty-prints `layout` in human-readable form.
  */
@@ -918,6 +922,7 @@ function optimize(
   const finish = now();
   const elapsed = finish - start;
   console.log(`Elapsed time: ${formatNumber(elapsed, 2)}s`);
+  return bestLayout;
 }
 
 /**
@@ -993,14 +998,12 @@ function printCorpusStats(corpus: string) {
   log(overview);
 }
 
-function getRandomLayout(): Layout {
-  let layout = LAYOUTS.QWERTY;
-  console.log('Creating random layout...');
-  const seen = {[getLayoutDigest(layout)]: true};
-  for (let i = 0; i < 1000; i++) {
-    layout = evolve(layout, seen);
-  }
-  return layout;
+function base64(input: string): string {
+  return ((new Buffer(input, 'ascii')).toString('base64'));
+}
+
+function unbase64(input: string): string {
+  return ((new Buffer(input, 'base64')).toString('ascii'));
 }
 
 (async function() {
@@ -1075,15 +1078,36 @@ function getRandomLayout(): Layout {
       }
       layout = LAYOUTS[layout];
     } else {
-      layout = getRandomLayout();
+      layout = LAYOUTS.QWERTY;
     }
     const corpus = await getCorpus();
     const {nGrams: trigrams} = getNGramFrequencies(corpus, 3);
     const sortedTrigrams = getSortedNGrams(trigrams);
     if (argv.rounds) {
-      for (let i = 0; i < argv.rounds; i++) {
-        optimize(layout, sortedTrigrams, argv.iterationCount);
-        log(`Finished round ${i + 1} of ${argv.rounds}`);
+      // see if we have progress for this layout already on disk
+      const savedStateFile = path.join('yak', layout.name + '.json');
+      let savedState;
+      try {
+        savedState = JSON.parse(await readFile(savedStateFile));
+      } catch (err) {
+        savedState = {
+          fitness: getFitness(layout, sortedTrigrams),
+          layout,
+          rounds: 0,
+        };
+      }
+      for (; savedState.rounds < argv.rounds; savedState.rounds++) {
+        const optimized = optimize(layout, sortedTrigrams, argv.iterationCount);
+        const fitness = getFitness(optimized, sortedTrigrams);
+        let result;
+        if (fitness > savedState.fitness) {
+          savedState.fitness = fitness;
+          savedState.layout = optimized;
+          result = 'accepted';
+        } else {
+          result = `rejected: ${savedState.fitness} <= ${fitness}`;
+        }
+        log(`Finished round ${savedState.rounds + 1} of ${argv.rounds} [${result}]`);
       }
     } else {
       // Not in batch mode; just do a single run, ignoring disk.

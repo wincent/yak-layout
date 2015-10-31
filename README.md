@@ -178,6 +178,19 @@ $ yak optimize [layout] # generate an optimal layout
 - [yak corpus-stats](https://gist.github.com/wincent/59d46104c20442f9ae2b)
 - [yak layout-stats](https://gist.github.com/wincent/1fc73024b61b19263252)
 
+### `yak optimize`
+
+`yak optimize` takes a couple of options that alter its behavior:
+
+- `-i` or `--iteration-count [count]` changes the number of iterations of its
+  genetic algorithm that `yak` will use to find an optimal layout. The default
+  is 10,000.
+- `-r [count]` or `--rounds [count]` activates a special batch mode in which
+  `yak` will try `count` times to find an optimal layout. Each "round" saves its
+  best-seen layouts to disk, and interrupted runs can be resumed by reading from
+  that file. As an example, `-r 1000 -i 20000` would cause `yak` to perform
+  1,000 rounds of optimization, each one of 20,000 iterations.
+
 ## Known issues
 
 - You have to B.Y.O.C. (Bring Your Own Corpus) and store in in
