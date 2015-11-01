@@ -16,7 +16,10 @@ import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 
+const close = Promise.promisify(fs.close);
+const open = Promise.promisify(fs.open);
 const readFile = Promise.promisify(fs.readFile);
+const write = Promise.promisify(fs.write);
 
 type Key = {
   id: number,
@@ -1108,6 +1111,15 @@ function unbase64(input: string): string {
           result = 'rejected';
         }
         log(`Finished round ${savedState.rounds + 1} of ${argv.rounds} [${result}]`);
+      }
+      let fd = null;
+      try {
+        fd = await open(savedStateFile, 'w');
+        await write(fd, JSON.stringify(savedState));
+      } finally {
+        if (fd) {
+          await close(fd);
+        }
       }
     } else {
       // Not in batch mode; just do a single run, ignoring disk.
