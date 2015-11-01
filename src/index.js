@@ -215,7 +215,7 @@ const FINGER_HOME_KEYS = [
 ];
 
 const FINGER_STRENGTHS = [
-  /* 0: left pinkie */ 0.1,
+  /* 0: left pinkie */ 0.4,
   /* 1: left ring */ 0.6,
   /* 2: left middle */ 0.7,
   /* 3: left index */ 0.9,
@@ -224,7 +224,7 @@ const FINGER_STRENGTHS = [
   /* 6: right index */ 1.0,
   /* 7: right middle */ 0.8,
   /* 8: right ring */ 0.7,
-  /* 9: right pinkie */ 0.1,
+  /* 9: right pinkie */ 0.4,
 ];
 
 /**
