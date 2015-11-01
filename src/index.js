@@ -1105,7 +1105,7 @@ function unbase64(input: string): string {
           savedState.layout = optimized;
           result = 'accepted';
         } else {
-          result = `rejected: ${savedState.fitness} <= ${fitness}`;
+          result = 'rejected';
         }
         log(`Finished round ${savedState.rounds + 1} of ${argv.rounds} [${result}]`);
       }
