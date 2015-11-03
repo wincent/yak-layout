@@ -1096,6 +1096,23 @@ function unbase64(input: string): string {
           rounds: 0,
         };
       }
+
+      async function writeState() {
+        const fd = await open(savedStateFile, 'w');
+        if (fd) {
+          try {
+            await write(fd, JSON.stringify(savedState));
+          } finally {
+            await close(fd);
+          }
+        }
+      };
+
+      process.on('SIGINT', async () => {
+        await writeState();
+        process.exit();
+      });
+
       for (; savedState.rounds < argv.rounds; savedState.rounds++) {
         resetLayoutLookupMaps(); // Don't want to exhaust memory.
         const optimized = optimize(layout, sortedTrigrams, argv.iterationCount);
@@ -1110,15 +1127,7 @@ function unbase64(input: string): string {
         }
         log(`Finished round ${savedState.rounds + 1} of ${argv.rounds} [${result}]`);
       }
-      let fd = null;
-      try {
-        fd = await open(savedStateFile, 'w');
-        await write(fd, JSON.stringify(savedState));
-      } finally {
-        if (fd) {
-          await close(fd);
-        }
-      }
+      await writeState();
     } else {
       // Not in batch mode; just do a single run, ignoring disk.
       optimize(layout, sortedTrigrams, argv.iterationCount);
