@@ -255,7 +255,11 @@ const LAYOUTS = {
   },
 };
 
-const layoutLookupMaps = new Map();
+let layoutLookupMaps = new Map();
+
+function resetLayoutLookupMaps() {
+  layoutLookupMaps = new Map();
+}
 
 /**
  * Given a "human-readable" layout, return a map for fast look-up from input
@@ -1093,6 +1097,7 @@ function unbase64(input: string): string {
         };
       }
       for (; savedState.rounds < argv.rounds; savedState.rounds++) {
+        resetLayoutLookupMaps(); // Don't want to exhaust memory.
         const optimized = optimize(layout, sortedTrigrams, argv.iterationCount);
         const fitness = getFitness(optimized, sortedTrigrams);
         let result;
