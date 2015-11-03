@@ -184,13 +184,6 @@ const FINGER_NAMES = [
   /* 9 */ 'Right Pinkie',
 ];
 
-/**
- * My shockingly unorthodox finger-to-key mappings.
- *
- * Note the almost non-existent use of pinkies, and relatively heavy use of the
- * ring fingers, which are typically regarded as among the least flexible
- * fingers.
- */
 const FINGERS_PLACEMENTS = [
   /* Row 0: */ 0, 0, 1, 2, 3, 3, 6, 6, 7, 8, 9, 9, 9, 9,
   /* Row 1: */ 0, 0, 1, 2, 3, 3, 6, 6, 7, 8, 9, 9, 9, 9,
