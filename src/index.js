@@ -867,7 +867,7 @@ function anneal(
   iteration: number,
   iterationCount: number
 ): boolean {
-  // Based on explanation at: http://mkweb.bcgsc.ca/carpalx/?simulated_annealing
+  // Based on explanation at: https://mk.bcgsc.ca/carpalx/?simulated_annealing
   const t = 250000 * Math.exp(-iteration * 10 / iterationCount);
   const p = Math.exp(-delta / t);
   return Math.random() < p;
